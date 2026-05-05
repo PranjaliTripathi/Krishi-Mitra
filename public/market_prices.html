@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title data-t="market_prices_nav">Krishi Mitra - Market Prices</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js">
+    window.updateCardPrice = function(selectEl, cropName) {
+        const cropPrices = window.groupedCropData[cropName];
+        if (!cropPrices) return;
+        const selectedIndex = selectEl.value;
+        const cp = cropPrices[selectedIndex];
+        
+        const card = selectEl.closest('.p-4');
+        const priceEl = card.querySelector('.price-val');
+        const trend15El = card.querySelector('.trend15-val');
+        
+        priceEl.innerHTML = '₹ ' + cp.price.toLocaleString();
+        trend15El.innerHTML = '<i class="bi bi-clock-history me-1"></i> ' + cp.trend15 + ' ';
+    };
+
+    window.openHistoryPage = function(cropName) {
+        localStorage.setItem('history_crop', cropName);
+        window.location.href = 'market_history.html';
+    };
+
+</script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        :root { --primary-green: #1a531b; --secondary-green: #2e7d32; }
+        body { background-color: #f0f2f5; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        .sidebar { height: 100vh; background: var(--primary-green); color: white; position: fixed; width: 250px; transition: all 0.3s; z-index: 1000; }
+        .sidebar a { color: #cfdfcf; text-decoration: none; padding: 12px 20px; display: block; transition: 0.2s; border-radius: 8px; margin: 4px 10px; }
+        .sidebar a:hover, .sidebar a.active { background: var(--secondary-green); color: white; }
+        .sidebar .bottom-links { position: absolute; bottom: 20px; width: 100%; }
+        .main-content { margin-left: 250px; padding: 20px; transition: all 0.3s; }
+        .mobile-nav { display: none; background: var(--primary-green); color: white; padding: 10px 20px; position: sticky; top: 0; z-index: 1001; }
+        .price-card { border: none; border-radius: 12px; transition: 0.2s; }
+        .price-card:hover { transform: scale(1.02); }
+        @media (max-width: 768px) {
+            .sidebar { transform: translateX(-100%); width: 250px; }
+            .sidebar.active { transform: translateX(0); }
+            .main-content { margin-left: 0; }
+            .mobile-nav { display: flex; justify-content: space-between; align-items: center; }
+            .overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 999; }
+            .overlay.active { display: block; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="overlay" id="overlay"></div>
+
+<div class="mobile-nav">
+    <h4 class="mb-0"><i class="bi bi-leaf"></i> Krishi Mitra</h4>
+    <button class="btn text-white fs-3 p-0" id="menuToggle"><i class="bi bi-list"></i></button>
+</div>
+
+<div class="sidebar" id="sidebar">
+    <div class="p-4 text-center">
+        <h3 class="fw-bold"><i class="bi bi-leaf"></i> <span data-t="brand">Krishi Mitra</span></h3>
+    </div>
+    <nav>
+        <a href="farmer_dashboard.html"><i class="bi bi-speedometer2 me-2"></i> <span data-t="dashboard">Dashboard</span></a>
+        <a href="weather.html"><i class="bi bi-cloud-sun me-2"></i> <span data-t="weather_nav">Weather</span></a>
+        <a href="my_crops.html"><i class="bi bi-tree me-2"></i> <span data-t="my_crops_nav">My Crops</span></a>
+        <a href="all_crops_info.html"><i class="bi bi-journal-text me-2"></i> <span data-t="all_crops_info_nav">Smart Crop Information</span></a>
+        <a href="schemes.html"><i class="bi bi-award me-2"></i> <span data-t="schemes_nav">Schemes</span></a>
+        <a href="market_prices.html" class="active"><i class="bi bi-graph-up-arrow me-2"></i> <span data-t="market_prices_nav">Market Price</span></a>
+        <a href="notifications.html"><i class="bi bi-bell me-2"></i> <span data-t="notifications_nav">Notifications</span></a>
+        <a href="queries.html"><i class="bi bi-question-circle me-2"></i> <span data-t="my_queries">My Questions</span></a>
+        
+        <div class="bottom-links">
+            <a href="profile.html"><i class="bi bi-person-circle me-2"></i> <span data-t="profile_nav">Profile</span></a>
+            <a href="#" id="logoutBtn" class="text-danger"><i class="bi bi-box-arrow-right me-2"></i> <span data-t="logout">Logout</span></a>
+        </div>
+    </nav>
+</div>
+
+<div class="main-content">
+    <div class="container">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="fw-bold mb-0" data-t="market_prices_title">Current Market Prices</h2>
+            <div class="text-end">
+                <div class="text-muted small" id="mandiLastUpdated">Updated: -</div>
+                <div class="text-muted small" style="font-size: 0.8rem;"><span data-t="source">Source</span>: <span id="mandiSource">-</span> | <span data-t="updated_by">Updated By</span>: <span id="mandiUpdatedBy">-</span></div>
+            </div>
+        </div>
+
+        <div class="row g-4" id="priceGrid">
+            <!-- Prices will be loaded here -->
+        </div>
+
+        <div class="mt-5">
+            <h4 class="fw-bold mb-4" data-t="market_price_trends">Market Price Trends (Top 5 Crops)</h4>
+            <div class="card border-0 shadow-sm rounded-4 p-4">
+                <div style="height: 400px;">
+                    <canvas id="priceTrendChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-5">
+            <h4 class="fw-bold mb-4" data-t="market_trends">Market Trends</h4>
+            <div class="card border-0 shadow-sm rounded-4 p-4">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th data-t="commodity">Commodity</th>
+                                <th data-t="price">Price</th>
+                                <th data-t="status">Trend</th>
+                                <th data-t="action">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="trendTable">
+                            <!-- Trends will be loaded here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="translations.js"></script>
+<script>
+    // Sidebar Toggle
+    const menuToggle = document.getElementById('menuToggle');
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('overlay');
+
+    menuToggle.addEventListener('click', () => {
+        sidebar.classList.add('active');
+        overlay.classList.add('active');
+    });
+
+    overlay.addEventListener('click', () => {
+        sidebar.classList.remove('active');
+        overlay.classList.remove('active');
+    });
+
+    function loadPrices() {
+        const lang = localStorage.getItem('krishi_mitra_lang') || 'en';
+        const t = translations[lang];
+
+        const mandiData = JSON.parse(localStorage.getItem('mandiData')) || {
+            prices: [
+                { id: 1, crop: 'Wheat', market: 'Indore', price: 2450, change: '+50', date: '2026-04-16' },
+                { id: 2, crop: 'Soybean', market: 'Ujjain', price: 4800, change: '-20', date: '2026-04-16' }
+            ],
+            lastUpdated: '10:00 AM Today',
+            source: 'Agmarknet',
+            updatedBy: 'Admin'
+        };
+
+        // Filter active prices and map to farmer view format
+        const prices = mandiData.prices.filter(p => p.status !== 'Inactive').map(p => {
+            const currentPrice = p.price;
+            let trend15Value = '0%';
+            
+            if (p.history && p.history.length > 1) {
+                const oldestPrice = p.history[p.history.length - 1].price;
+                const change = ((currentPrice - oldestPrice) / oldestPrice) * 100;
+                trend15Value = (change >= 0 ? '+' : '') + change.toFixed(1) + '%';
+            }
+
+            return {
+                name: t[p.crop.toLowerCase()] || p.crop,
+                market: t[p.market.toLowerCase()] || p.market,
+                price: currentPrice,
+                unit: t.quintal,
+                trend: p.trend === 'up' ? 'up' : (p.trend === 'down' ? 'down' : 'stable'),
+                change: p.trend === 'up' ? '+₹50' : (p.trend === 'down' ? '-₹50' : '0'), // Mock change amount if not stored
+                trend15: trend15Value
+            };
+        });
+
+        document.getElementById('mandiLastUpdated').innerText = `${t.updated}: ${mandiData.lastUpdated || (lang === 'hi' ? 'अज्ञात' : 'Unknown')}`;
+        document.getElementById('mandiSource').innerText = mandiData.source || (lang === 'hi' ? 'अनुपलब्ध' : 'N/A');
+        document.getElementById('mandiUpdatedBy').innerText = mandiData.updatedBy || (lang === 'hi' ? 'अनुपलब्ध' : 'N/A');
+
+        
+        const grid = document.getElementById('priceGrid');
+        
+        // Group prices by crop
+        const groupedPrices = {};
+        prices.forEach(p => {
+            if (!groupedPrices[p.name]) {
+                groupedPrices[p.name] = [];
+            }
+            groupedPrices[p.name].push(p);
+        });
+
+        const updateStr = mandiData.lastUpdated ? "Updated " + mandiData.lastUpdated : "";
+
+        grid.innerHTML = Object.keys(groupedPrices).map(cropName => {
+            const cropPrices = groupedPrices[cropName];
+            const p = cropPrices[0]; // default selected
+            const options = cropPrices.map((cp, idx) => `<option value="${idx}">${cp.market}</option>`).join('');
+            
+            return `
+            <div class="col-md-4 col-sm-6">
+                <div class="p-4 bg-white border border-success border-opacity-25 rounded-4 shadow-sm h-100 position-relative">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <h5 class="fw-bold mb-0 text-dark">${cropName}</h5>
+                        <span class="badge bg-${p.trend === 'up' ? 'success' : (p.trend === 'down' ? 'danger' : 'secondary')} bg-opacity-10 text-${p.trend === 'up' ? 'success' : (p.trend === 'down' ? 'danger' : 'secondary')}">
+                            <i class="bi bi-${p.trend === 'up' ? 'caret-up-fill' : (p.trend === 'down' ? 'caret-down-fill' : 'dash-lg')}"></i> ${p.change}
+                        </span>
+                    </div>
+                    <div class="mb-3">
+                        <select class="form-select form-select-sm border-success border-opacity-50 text-success fw-bold" onchange="updateCardPrice(this, '${cropName}')">
+                            ${options}
+                        </select>
+                    </div>
+                    <h3 class="fw-bold text-success mb-1 price-val">₹ ${p.price.toLocaleString()}</h3>
+                    <div class="d-flex justify-content-between align-items-center mt-2 pt-2 border-top">
+                        <small class="text-muted">${t.per || (lang === 'hi' ? 'प्रति' : 'Per')} ${p.unit}</small>
+                        <small class="text-${p.trend === 'up' ? 'success' : 'danger'} fw-bold trend15-val">
+                            <i class="bi bi-clock-history me-1"></i> ${p.trend15} (${lang === 'hi' ? '15 दिन' : '15d'})
+                        </small>
+                    </div>
+                    ${updateStr ? `<div class="text-muted small mt-2 text-end"><i class="bi bi-info-circle me-1"></i>${updateStr}</div>` : ''}
+                </div>
+            </div>
+            `;
+        }).join('');
+
+        window.groupedCropData = groupedPrices;
+
+
+        const trendTable = document.getElementById('trendTable');
+        trendTable.innerHTML = prices.map(p => `
+            <tr>
+                <td class="fw-bold">${p.name}</td>
+                <td>₹ ${p.price.toLocaleString()}</td>
+                <td>
+                    <span class="text-${p.trend === 'up' ? 'success' : (p.trend === 'down' ? 'danger' : 'secondary')}">
+                        <i class="bi bi-${p.trend === 'up' ? 'graph-up' : (p.trend === 'down' ? 'graph-down' : 'dash-lg')}"></i> ${p.trend === 'up' ? t.increase : (p.trend === 'down' ? t.decrease : t.no_change)}
+                    </span>
+                </td>
+                <td><button class="btn btn-sm btn-outline-success" data-t="view_history" onclick="openHistoryPage('${p.name}')">${t.view_history}</button></td>
+            </tr>
+        `).join('');
+
+        renderTrendChart(prices.slice(0, 5));
+    }
+
+    let trendChart = null;
+    function renderTrendChart(topCrops) {
+        const ctx = document.getElementById('priceTrendChart').getContext('2d');
+        const lang = localStorage.getItem('krishi_mitra_lang') || 'en';
+        
+        if (trendChart) trendChart.destroy();
+
+        const days = 7;
+        const labels = [];
+        for (let i = days - 1; i >= 0; i--) {
+            const d = new Date();
+            d.setDate(d.getDate() - i);
+            labels.push(d.toLocaleDateString(lang === 'hi' ? 'hi-IN' : 'en-US', { weekday: 'short', day: 'numeric' }));
+        }
+
+        const datasets = topCrops.map((crop, index) => {
+            const colors = [
+                '#1a531b', // Dark Green
+                '#2e7d32', // Medium Green
+                '#4caf50', // Green
+                '#81c784', // Light Green
+                '#a5d6a7'  // Very Light Green
+            ];
+            
+            // Generate random-ish trend data based on current price
+            const data = [];
+            let current = crop.price;
+            for (let i = 0; i < days; i++) {
+                data.push(current);
+                const change = (Math.random() - 0.5) * (current * 0.05); // max 5% change
+                current += change;
+            }
+            // Ensure the last point is the current price for consistency
+            data[days - 1] = crop.price;
+
+            return {
+                label: crop.name,
+                data: data,
+                borderColor: colors[index],
+                backgroundColor: colors[index] + '20',
+                fill: false,
+                tension: 0.4,
+                borderWidth: 3,
+                pointRadius: 4,
+                pointHoverRadius: 6
+            };
+        });
+
+        trendChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: datasets
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            usePointStyle: true,
+                            padding: 20,
+                            font: { size: 12, weight: 'bold' }
+                        }
+                    },
+                    tooltip: {
+                        mode: 'index',
+                        intersect: false,
+                        backgroundColor: 'rgba(0,0,0,0.8)',
+                        padding: 12,
+                        callbacks: {
+                            label: function(context) {
+                                return context.dataset.label + ': ₹ ' + Math.round(context.raw).toLocaleString();
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: false,
+                        grid: { color: 'rgba(0,0,0,0.05)' },
+                        ticks: {
+                            callback: function(value) { return '₹' + value.toLocaleString(); }
+                        }
+                    },
+                    x: {
+                        grid: { display: false }
+                    }
+                }
+            }
+        });
+    }
+
+    // Logout with Confirmation
+    document.getElementById('logoutBtn').addEventListener('click', () => {
+        const lang = localStorage.getItem('krishi_mitra_lang') || 'en';
+        const t = translations[lang];
+        Swal.fire({
+            title: t.logout_confirm_title,
+            text: t.logout_confirm,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#28a745',
+            cancelButtonColor: '#d33',
+            confirmButtonText: t.logout
+        }).then((result) => {
+            if (result.isConfirmed) {
+                localStorage.removeItem('user');
+                window.location.href = 'index.html#top';
+            }
+        });
+    });
+
+    const fetchAndUpdatePrices = () => {
+        loadPrices();
+    };
+
+    // Auto-refresh every 5 seconds
+    setInterval(fetchAndUpdatePrices, 5000);
+
+    loadPrices();
+</script>
+</body>
+</html>

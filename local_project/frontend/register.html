@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title data-t="register_title">Krishi Mitra - Farmer Registration</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        body { background-color: #f8f9fa; }
+        .register-container { max-width: 600px; margin-top: 50px; margin-bottom: 50px; }
+        .card { border: none; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        .btn-success { background-color: #28a745; border: none; }
+        .error-msg { color: #dc3545; font-size: 0.85rem; margin-top: 0.25rem; display: none; }
+        .lang-switch { position: absolute; top: 20px; right: 20px; }
+    </style>
+</head>
+<body>
+
+<div class="lang-switch">
+    <button class="btn btn-outline-success btn-sm" onclick="toggleLanguage()">
+        <i class="bi bi-translate"></i> <span id="langToggleText">हिंदी</span>
+    </button>
+</div>
+
+<div class="container register-container">
+    <div class="text-center mb-4">
+        <h2 class="text-success fw-bold" data-t="register_title">Farmer Registration</h2>
+        <p class="text-muted" data-t="brand">Join Krishi Mitra Community</p>
+    </div>
+    <div class="card p-4">
+        <form id="registerForm" novalidate>
+            <div class="mb-4">
+                <label class="form-label fw-medium" data-t="name_label">Full Name</label>
+                <input type="text" class="form-control form-control-lg" id="name" required placeholder="Enter your full name">
+                <div class="error-msg" id="name_error"></div>
+            </div>
+            <div class="mb-4">
+                <label class="form-label fw-medium" data-t="email_mobile_label">Email or Mobile</label>
+                <input type="text" class="form-control form-control-lg" id="email_mobile" required placeholder="Enter email or mobile number">
+                <div class="error-msg" id="email_mobile_error"></div>
+            </div>
+            <div class="row">
+                <div class="col-md-6 mb-4">
+                    <label class="form-label fw-medium" data-t="password_label">Password</label>
+                    <div class="input-group input-group-lg">
+                        <input type="password" class="form-control border-end-0" id="password" required placeholder="Create password">
+                        <button class="btn btn-outline-secondary border-start-0 bg-white" type="button" id="togglePassword">
+                            <i class="bi bi-eye"></i>
+                        </button>
+                    </div>
+                    <div class="error-msg" id="password_error"></div>
+                </div>
+                <div class="col-md-6 mb-4">
+                    <label class="form-label fw-medium" data-t="confirm_password_label">Confirm Password</label>
+                    <div class="input-group input-group-lg">
+                        <input type="password" class="form-control border-end-0" id="confirm_password" required placeholder="Confirm password">
+                        <button class="btn btn-outline-secondary border-start-0 bg-white" type="button" id="toggleConfirmPassword">
+                            <i class="bi bi-eye"></i>
+                        </button>
+                    </div>
+                    <div class="error-msg" id="confirm_password_error"></div>
+                </div>
+            </div>
+            <hr class="my-4 opacity-10">
+            <h5 class="mb-4 fw-bold text-success" data-t="security_question_label">Security Settings</h5>
+            <div class="mb-4">
+                <label class="form-label fw-medium" data-t="security_question_label">Security Question</label>
+                <select class="form-select form-select-lg" id="security_question" required>
+                    <option value="" data-t="select_question">Select a question</option>
+                    <option value="What is your birth place?">What is your birth place?</option>
+                    <option value="What is your favorite crop?">What is your favorite crop?</option>
+                    <option value="What is your pet's name?">What is your pet's name?</option>
+                </select>
+                <div class="error-msg" id="security_question_error"></div>
+            </div>
+            <div class="mb-4">
+                <label class="form-label fw-medium" data-t="security_answer_label">Your Answer</label>
+                <input type="text" class="form-control form-control-lg" id="security_answer" required placeholder="Enter your answer">
+                <div class="error-msg" id="security_answer_error"></div>
+            </div>
+            <hr class="my-4 opacity-10">
+            <h5 class="mb-4 fw-bold text-success" data-t="village_label">Farmer Details (Optional)</h5>
+            <div class="mb-4">
+                <label class="form-label fw-medium" data-t="village_label">Village</label>
+                <input type="text" class="form-control form-control-lg" id="village" placeholder="Enter village name">
+            </div>
+            <div class="row">
+                <div class="col-md-6 mb-4">
+                    <label class="form-label fw-medium" data-t="land_size_label">Land Size (Acres)</label>
+                    <input type="number" class="form-control form-control-lg" id="land_size" placeholder="e.g. 5">
+                </div>
+                <div class="col-md-6 mb-4">
+                    <label class="form-label fw-medium" data-t="soil_type_label">Soil Type</label>
+                    <select class="form-select form-select-lg" id="soil_type">
+                        <option value="" data-t="select_soil">Select Soil Type</option>
+                        <option value="Alluvial">Alluvial</option>
+                        <option value="Black">Black</option>
+                        <option value="Red">Red</option>
+                        <option value="Laterite">Laterite</option>
+                    </select>
+                </div>
+            </div>
+            <button type="submit" class="btn btn-success w-100 py-3 mt-3 fw-bold shadow-sm" data-t="register_btn">Register</button>
+        </form>
+        <div class="text-center mt-4">
+            <p><span data-t="login_title">Already have an account?</span> <a href="index.html" class="text-success fw-bold text-decoration-none" data-t="login_btn">Login here</a></p>
+        </div>
+    </div>
+</div>
+
+<script src="translations.js"></script>
+<script>
+    function toggleLanguage() {
+        const currentLang = localStorage.getItem('krishi_mitra_lang') || 'en';
+        setLanguage(currentLang === 'en' ? 'hi' : 'en');
+    }
+
+    function setupTogglePassword(btnId, inputId) {
+        document.getElementById(btnId).addEventListener('click', function() {
+            const input = document.getElementById(inputId);
+            const icon = this.querySelector('i');
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.classList.replace('bi-eye', 'bi-eye-slash');
+            } else {
+                input.type = 'password';
+                icon.classList.replace('bi-eye-slash', 'bi-eye');
+            }
+        });
+    }
+
+    setupTogglePassword('togglePassword', 'password');
+    setupTogglePassword('toggleConfirmPassword', 'confirm_password');
+
+    document.getElementById('registerForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        // Reset errors
+        document.querySelectorAll('.error-msg').forEach(el => el.style.display = 'none');
+        
+        const lang = localStorage.getItem('krishi_mitra_lang') || 'en';
+        const t = translations[lang];
+
+        const name = document.getElementById('name').value;
+        const email_mobile = document.getElementById('email_mobile').value;
+        const password = document.getElementById('password').value;
+        const confirm_password = document.getElementById('confirm_password').value;
+        const security_question = document.getElementById('security_question').value;
+        const security_answer = document.getElementById('security_answer').value;
+
+        let hasError = false;
+        if (!name) {
+            const err = document.getElementById('name_error');
+            err.innerText = t.all_fields_required;
+            err.style.display = 'block';
+            hasError = true;
+        }
+        if (!email_mobile) {
+            const err = document.getElementById('email_mobile_error');
+            err.innerText = t.all_fields_required;
+            err.style.display = 'block';
+            hasError = true;
+        }
+        if (!password) {
+            const err = document.getElementById('password_error');
+            err.innerText = t.all_fields_required;
+            err.style.display = 'block';
+            hasError = true;
+        }
+        if (password !== confirm_password) {
+            const err = document.getElementById('confirm_password_error');
+            err.innerText = t.passwords_not_match;
+            err.style.display = 'block';
+            hasError = true;
+        }
+        if (!security_question) {
+            const err = document.getElementById('security_question_error');
+            err.innerText = t.all_fields_required;
+            err.style.display = 'block';
+            hasError = true;
+        }
+        if (!security_answer) {
+            const err = document.getElementById('security_answer_error');
+            err.innerText = t.all_fields_required;
+            err.style.display = 'block';
+            hasError = true;
+        }
+
+        if (hasError) return;
+
+        const formData = {
+            name,
+            email_mobile,
+            password,
+            security_question,
+            security_answer,
+            role: 'farmer',
+            village: document.getElementById('village').value,
+            land_size: document.getElementById('land_size').value,
+            soil_type: document.getElementById('soil_type').value
+        };
+
+        try {
+            const response = await fetch('http://localhost:5000/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(formData)
+            });
+            const data = await response.json();
+            if (response.ok) {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Success!',
+                    text: t.registration_success,
+                    confirmButtonColor: '#28a745'
+                }).then(() => {
+                    window.location.href = 'index.html';
+                });
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: data.error,
+                    confirmButtonColor: '#28a745'
+                });
+            }
+        } catch (err) {
+            console.error(err);
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Registration failed. Make sure backend is running on port 5000.',
+                confirmButtonColor: '#28a745'
+            });
+        }
+    });
+</script>
+</body>
+</html>

@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title data-t="all_crops_info_nav">Krishi Mitra - Smart Crop Information</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root { --primary-green: #1a531b; --secondary-green: #2e7d32; }
+        body { background-color: #f0f2f5; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        .sidebar { height: 100vh; background: var(--primary-green); color: white; position: fixed; width: 250px; transition: all 0.3s; z-index: 1000; }
+        .sidebar a { color: #cfdfcf; text-decoration: none; padding: 12px 20px; display: block; transition: 0.2s; border-radius: 8px; margin: 4px 10px; }
+        .sidebar a:hover, .sidebar a.active { background: var(--secondary-green); color: white; }
+        .sidebar .bottom-links { position: absolute; bottom: 20px; width: 100%; }
+        .main-content { margin-left: 250px; padding: 20px; transition: all 0.3s; }
+        .mobile-nav { display: none; background: var(--primary-green); color: white; padding: 10px 20px; position: sticky; top: 0; z-index: 1001; }
+        .detail-card { border: none; border-radius: 20px; overflow: hidden; }
+        .section-title { border-left: 4px solid var(--secondary-green); padding-left: 15px; margin-bottom: 20px; }
+        .info-box { background: #f8f9fa; border-radius: 12px; padding: 15px; height: 100%; }
+        .crop-carousel img { height: 400px; object-fit: cover; border-radius: 20px; }
+        .risk-indicator { height: 10px; border-radius: 5px; background: #e9ecef; overflow: hidden; }
+        .risk-bar { height: 100%; transition: width 0.5s; }
+        .risk-low { background: #28a745; }
+        .risk-medium { background: #ffc107; }
+        .risk-high { background: #dc3545; }
+        @media (max-width: 768px) {
+            .sidebar { transform: translateX(-100%); width: 250px; }
+            .sidebar.active { transform: translateX(0); }
+            .main-content { margin-left: 0; }
+            .mobile-nav { display: flex; justify-content: space-between; align-items: center; }
+            .overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 999; }
+            .overlay.active { display: block; }
+            .crop-carousel img { height: 250px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="overlay" id="overlay"></div>
+
+<div class="mobile-nav">
+    <h4 class="mb-0"><i class="bi bi-leaf"></i> Krishi Mitra</h4>
+    <button class="btn text-white fs-3 p-0" id="menuToggle"><i class="bi bi-list"></i></button>
+</div>
+
+<div class="sidebar" id="sidebar">
+    <div class="p-4 text-center">
+        <h3 class="fw-bold"><i class="bi bi-leaf"></i> <span data-t="brand">Krishi Mitra</span></h3>
+    </div>
+    <nav>
+        <a href="farmer_dashboard.html"><i class="bi bi-speedometer2 me-2"></i> <span data-t="dashboard">Dashboard</span></a>
+        <a href="weather.html"><i class="bi bi-cloud-sun me-2"></i> <span data-t="weather_nav">Weather</span></a>
+        <a href="my_crops.html"><i class="bi bi-tree me-2"></i> <span data-t="my_crops_nav">My Crops</span></a>
+        <a href="all_crops_info.html" class="active"><i class="bi bi-journal-text me-2"></i> <span data-t="all_crops_info_nav">Smart Crop Information</span></a>
+        <a href="schemes.html"><i class="bi bi-award me-2"></i> <span data-t="schemes_nav">Schemes</span></a>
+        <a href="market_prices.html"><i class="bi bi-graph-up-arrow me-2"></i> <span data-t="market_prices_nav">Market Price</span></a>
+        <a href="notifications.html"><i class="bi bi-bell me-2"></i> <span data-t="notifications_nav">Notifications</span></a>
+        <a href="queries.html"><i class="bi bi-question-circle me-2"></i> <span data-t="my_queries">My Questions</span></a>
+        
+        <div class="bottom-links">
+            <a href="profile.html"><i class="bi bi-person-circle me-2"></i> <span data-t="profile_nav">Profile</span></a>
+            <a href="#" id="logoutBtn" class="text-danger"><i class="bi bi-box-arrow-right me-2"></i> <span data-t="logout">Logout</span></a>
+        </div>
+    </nav>
+</div>
+
+<div class="main-content">
+    <div class="container">
+        <div class="mb-4">
+            <a href="all_crops_info.html" class="btn btn-light rounded-pill px-3 shadow-sm">
+                <i class="bi bi-arrow-left me-2"></i> <span data-t="back_btn">Back</span>
+            </a>
+        </div>
+
+        <div id="cropDetailContent">
+            <!-- Content will be loaded here -->
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="translations.js"></script>
+<script src="crops_data.js"></script>
+<script>
+    const user = JSON.parse(localStorage.getItem('user'));
+    if (!user || user.role !== 'farmer') window.location.href = 'login.html';
+
+    // Sync initialization
+    if (!localStorage.getItem('admin_crops')) {
+        localStorage.setItem('admin_crops', JSON.stringify(cropsData));
+    }
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const cropId = parseInt(urlParams.get('id'));
+
+    function renderDetails() {
+        const lang = localStorage.getItem('krishi_mitra_lang') || 'en';
+        const t = translations[lang];
+        const content = document.getElementById('cropDetailContent');
+
+        // Fetch latest data to ensure sync
+        const currentCrops = JSON.parse(localStorage.getItem('admin_crops')) || cropsData;
+        const crop = currentCrops.find(c => c.id === cropId);
+
+        if (!crop) {
+            window.location.href = 'all_crops_info.html';
+            return;
+        }
+
+        const riskClass = (crop.risk_level || "Low") === 'Low' ? 'risk-low' : ((crop.risk_level || "Low") === 'Medium' ? 'risk-medium' : 'risk-high');
+        const riskWidth = (crop.risk_level || "Low") === 'Low' ? '33%' : ((crop.risk_level || "Low") === 'Medium' ? '66%' : '100%');
+
+        content.innerHTML = `
+            <div class="card detail-card shadow-sm p-4 p-md-5 bg-white mb-4">
+                <div class="row align-items-center mb-4">
+                    <div class="col-md">
+                        <h1 class="fw-bold mb-1">${lang === 'en' ? (crop.name_en || "Crop") : (crop.name_hi || "फसल")}</h1>
+                        <p class="text-muted fs-5 mb-0">${lang === 'en' ? (crop.season_en || "Kharif") : (crop.season_hi || "खरीफ")} ${t.season}</p>
+                    </div>
+                    <div class="col-md-auto mt-3 mt-md-0">
+                        <div class="p-3 bg-light rounded-4" style="width: 200px;">
+                            <small class="text-muted d-block mb-1" data-t="risk_level">${t.risk_level}</small>
+                            <div style="height: 100px;">
+                                <canvas id="riskChart"></canvas>
+                            </div>
+                            <div class="text-center mt-1">
+                                <span class="fw-bold text-${crop.risk_level === 'Low' ? 'success' : (crop.risk_level === 'Medium' ? 'warning' : 'danger')}">${t[crop.risk_level.toLowerCase()]}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- About Section -->
+                <div class="mb-5">
+                    <h4 class="fw-bold section-title" data-t="about">${t.about}</h4>
+                    <p class="text-muted" style="line-height: 1.8; text-align: justify;">
+                        ${lang === 'en' ? crop.about_en : crop.about_hi}
+                    </p>
+                </div>
+
+                <!-- Basic Info -->
+                <div class="mb-5">
+                    <h4 class="fw-bold section-title" data-t="general_tips">${t.general_tips}</h4>
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <div class="info-box">
+                                <small class="text-muted d-block" data-t="suitable_soil">${t.suitable_soil}</small>
+                                <span class="fw-bold">${lang === 'en' ? crop.soil_en : crop.soil_hi}</span>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="info-box">
+                                <small class="text-muted d-block" data-t="sowing_month">${t.sowing_month}</small>
+                                <span class="fw-bold">${lang === 'en' ? crop.sowing_en : crop.sowing_hi}</span>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="info-box">
+                                <small class="text-muted d-block" data-t="harvest_month">${t.harvest_month}</small>
+                                <span class="fw-bold">${lang === 'en' ? crop.harvest_en : crop.harvest_hi}</span>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="info-box">
+                                <small class="text-muted d-block" data-t="duration">${t.duration}</small>
+                                <span class="fw-bold">${crop.duration} ${t.days}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Input Details -->
+                <div class="mb-5">
+                    <h4 class="fw-bold section-title" data-t="input_requirements">${t.input_requirements}</h4>
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <div class="info-box">
+                                <small class="text-muted d-block" data-t="seed_type">${t.seed_type}</small>
+                                <span class="fw-bold">${lang === 'en' ? crop.seed_en : crop.seed_hi}</span>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="info-box">
+                                <small class="text-muted d-block" data-t="fertilizer_requirement">${t.fertilizer_requirement}</small>
+                                <span class="fw-bold">${lang === 'en' ? crop.fertilizer_en : crop.fertilizer_hi}</span>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="info-box">
+                                <small class="text-muted d-block" data-t="water_requirement">${t.water_requirement}</small>
+                                <span class="fw-bold">${lang === 'en' ? crop.water_en : crop.water_hi}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Production & Economics -->
+                <div class="mb-5">
+                    <h4 class="fw-bold section-title" data-t="production_economics">${t.production_economics}</h4>
+                    <div class="row g-4">
+                        <div class="col-md-6">
+                            <div class="p-4 border rounded-4 bg-light">
+                                <h6 class="fw-bold mb-3" data-t="cost_breakdown_per_acre">${t.cost_breakdown_per_acre}</h6>
+                                <div class="d-flex justify-content-between mb-2">
+                                    <span data-t="seed_cost">${t.seed_cost}</span>
+                                    <span class="fw-bold">₹ ${crop.cost_breakdown.seed}</span>
+                                </div>
+                                <div class="d-flex justify-content-between mb-2">
+                                    <span data-t="fertilizer_cost">${t.fertilizer_cost}</span>
+                                    <span class="fw-bold">₹ ${crop.cost_breakdown.fertilizer}</span>
+                                </div>
+                                <div class="d-flex justify-content-between mb-2">
+                                    <span data-t="pesticide_cost">${t.pesticide_cost}</span>
+                                    <span class="fw-bold">₹ ${crop.cost_breakdown.pesticide}</span>
+                                </div>
+                                <div class="d-flex justify-content-between mb-2">
+                                    <span data-t="labor_cost">${t.labor_cost}</span>
+                                    <span class="fw-bold">₹ ${crop.cost_breakdown.labor}</span>
+                                </div>
+                                <div class="d-flex justify-content-between mb-3">
+                                    <span data-t="irrigation_cost">${t.irrigation_cost}</span>
+                                    <span class="fw-bold">₹ ${crop.cost_breakdown.irrigation}</span>
+                                </div>
+                                <hr>
+                                <div class="d-flex justify-content-between">
+                                    <span class="fw-bold" data-t="total_cost">${t.total_cost}</span>
+                                    <span class="fw-bold text-danger">₹ ${crop.cost}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="row g-3">
+                                <div class="col-12">
+                                    <div class="info-box text-center">
+                                        <small class="text-muted d-block" data-t="expected_yield">${t.expected_yield}</small>
+                                        <h3 class="fw-bold mb-0">${crop.yield}</h3>
+                                    </div>
+                                </div>
+                                <div class="col-12">
+                                    <div class="info-box text-center bg-success bg-opacity-10 border border-success border-opacity-25">
+                                        <small class="text-muted d-block" data-t="expected_profit">${t.expected_profit}</small>
+                                        <h2 class="fw-bold text-success mb-0">₹ ${crop.profit}</h2>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Crop Advisory Section -->
+                <div class="mb-5">
+                    <h4 class="fw-bold section-title" data-t="detailed_crop_advisory">${t.detailed_crop_advisory}</h4>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <div class="info-box">
+                                <h6 class="fw-bold text-success"><i class="bi bi-calendar-check me-2"></i> <span data-t="sowing_month">${t.sowing_month}</span></h6>
+                                <p class="mb-0">${lang === 'en' ? crop.advisory_en.best_sowing : crop.advisory_hi.best_sowing}</p>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="info-box">
+                                <h6 class="fw-bold text-success"><i class="bi bi-clock-history me-2"></i> <span data-t="harvest_timing">${t.harvest_timing}</span></h6>
+                                <p class="mb-0">${lang === 'en' ? crop.advisory_en.harvest_timing : crop.advisory_hi.harvest_timing}</p>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="info-box">
+                                <h6 class="fw-bold text-success"><i class="bi bi-droplet me-2"></i> <span data-t="fertilizer_schedule">${t.fertilizer_schedule}</span></h6>
+                                <p class="mb-0">${lang === 'en' ? crop.advisory_en.fertilizer_schedule : crop.advisory_hi.fertilizer_schedule}</p>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="info-box">
+                                <h6 class="fw-bold text-success"><i class="bi bi-box-seam me-2"></i> <span data-t="seed_quantity">${t.seed_quantity}</span></h6>
+                                <p class="mb-0">${lang === 'en' ? crop.advisory_en.seed_quantity : crop.advisory_hi.seed_quantity}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Disease Info -->
+                <div class="mb-5">
+                    <h4 class="fw-bold section-title" data-t="pest_disease">${t.pest_disease}</h4>
+                    <div class="row g-4">
+                        ${crop.diseases.length > 0 ? crop.diseases.map(d => `
+                            <div class="col-12">
+                                <div class="p-4 border rounded-4 bg-light bg-opacity-50">
+                                    <h5 class="fw-bold text-danger mb-3"><i class="bi bi-bug me-2"></i> ${lang === 'en' ? d.name_en : d.name_hi}</h5>
+                                    <div class="row g-3">
+                                        <div class="col-md-4">
+                                            <small class="text-muted d-block" data-t="cause">${t.cause}</small>
+                                            <span class="fw-bold">${d.cause}</span>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <small class="text-muted d-block" data-t="occurrence">${t.occurrence}</small>
+                                            <span class="fw-bold">${lang === 'en' ? d.occurrence_en : d.occurrence_hi}</span>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <small class="text-muted d-block" data-t="prevention">${t.prevention}</small>
+                                            <span class="fw-bold">${lang === 'en' ? d.prevention_en : d.prevention_hi}</span>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <small class="text-muted d-block" data-t="symptoms">${t.symptoms}</small>
+                                            <span class="fw-bold">${lang === 'en' ? d.symptoms_en : d.symptoms_hi}</span>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <small class="text-muted d-block" data-t="treatment">${t.treatment}</small>
+                                            <span class="fw-bold text-success">${lang === 'en' ? d.treatment_en : d.treatment_hi}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        `).join('') : `<div class="col-12 text-center text-muted" data-t="no_disease_data">${t.no_disease_data}</div>`}
+                    </div>
+                </div>
+
+                <!-- Prevention & Suggestions -->
+                ${(crop.prevention_en || crop.suggestions_en) ? `
+                <div class="mb-5">
+                    <h4 class="fw-bold section-title" data-t="prevention_suggestions">${t.prevention_suggestions}</h4>
+                    <div class="row g-3">
+                        ${crop.prevention_en ? `
+                        <div class="col-md-6">
+                            <div class="info-box border-start border-danger border-4">
+                                <h6 class="fw-bold text-danger"><i class="bi bi-shield-check me-2"></i> <span data-t="prevention">${t.prevention}</span></h6>
+                                <p class="mb-0">${lang === 'en' ? crop.prevention_en : crop.prevention_hi}</p>
+                            </div>
+                        </div>` : ''}
+                        ${crop.suggestions_en ? `
+                        <div class="col-md-6">
+                            <div class="info-box border-start border-primary border-4">
+                                <h6 class="fw-bold text-primary"><i class="bi bi-lightbulb me-2"></i> <span data-t="suggestions">Suggestions</span></h6>
+                                <p class="mb-0">${lang === 'en' ? crop.suggestions_en : crop.suggestions_hi}</p>
+                            </div>
+                        </div>` : ''}
+                    </div>
+                </div>` : ''}
+
+                <!-- Smart Tips -->
+                <div>
+                    <h4 class="fw-bold section-title" data-t="smart_tips_best_practices">${t.smart_tips_best_practices}</h4>
+                    <div class="p-4 bg-success bg-opacity-10 rounded-4 border border-success border-opacity-25">
+                        <div class="d-flex align-items-start">
+                            <i class="bi bi-lightbulb text-success fs-3 me-3"></i>
+                            <div>
+                                <h6 class="fw-bold text-success" data-t="best_practices">${t.best_practices}</h6>
+                                <p class="mb-0">${lang === 'en' ? crop.tips_en : crop.tips_hi}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        applyTranslations();
+        initRiskChart();
+    }
+
+    function initRiskChart() {
+        const lang = localStorage.getItem('krishi_mitra_lang') || 'en';
+        const t = translations[lang];
+        const ctx = document.getElementById('riskChart').getContext('2d');
+        
+        const riskValue = crop.risk_level === 'Low' ? 30 : (crop.risk_level === 'Medium' ? 60 : 90);
+        const riskColor = crop.risk_level === 'Low' ? '#28a745' : (crop.risk_level === 'Medium' ? '#ffc107' : '#dc3545');
+
+        new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                datasets: [{
+                    data: [riskValue, 100 - riskValue],
+                    backgroundColor: [riskColor, '#e9ecef'],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                cutout: '70%',
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { tooltip: { enabled: false }, legend: { display: false } }
+            }
+        });
+    }
+
+    // Sidebar Toggle
+    const menuToggle = document.getElementById('menuToggle');
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('overlay');
+
+    menuToggle.addEventListener('click', () => {
+        sidebar.classList.add('active');
+        overlay.classList.add('active');
+    });
+
+    overlay.addEventListener('click', () => {
+        sidebar.classList.remove('active');
+        overlay.classList.remove('active');
+    });
+
+    // Logout
+    document.getElementById('logoutBtn').addEventListener('click', () => {
+        const lang = localStorage.getItem('krishi_mitra_lang') || 'en';
+        const t = translations[lang];
+        Swal.fire({
+            title: t.logout_confirm_title,
+            text: t.logout_confirm,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#28a745',
+            cancelButtonColor: '#d33',
+            confirmButtonText: t.logout
+        }).then((result) => {
+            if (result.isConfirmed) {
+                localStorage.removeItem('user');
+                window.location.href = 'index.html#top';
+            }
+        });
+    });
+
+    renderDetails();
+
+    // Listen for data changes
+    window.addEventListener('storage', (e) => {
+        if (e.key === 'krishi_mitra_lang' || e.key === 'admin_crops') {
+            renderDetails();
+        }
+    });
+</script>
+</body>
+</html>

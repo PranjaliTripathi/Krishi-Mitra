@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title data-t="crop_advisory">Krishi Mitra - Advisory</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        :root { --primary-green: #1a531b; --secondary-green: #2e7d32; }
+        body { background-color: #f0f2f5; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        .sidebar { height: 100vh; background: var(--primary-green); color: white; position: fixed; width: 250px; transition: all 0.3s; z-index: 1000; }
+        .sidebar a { color: #cfdfcf; text-decoration: none; padding: 12px 20px; display: block; transition: 0.2s; border-radius: 8px; margin: 4px 10px; }
+        .sidebar a:hover, .sidebar a.active { background: var(--secondary-green); color: white; }
+        .sidebar .bottom-links { position: absolute; bottom: 20px; width: 100%; }
+        .main-content { margin-left: 250px; padding: 20px; transition: all 0.3s; }
+        .mobile-nav { display: none; background: var(--primary-green); color: white; padding: 10px 20px; position: sticky; top: 0; z-index: 1001; }
+        @media (max-width: 768px) {
+            .sidebar { transform: translateX(-100%); width: 250px; }
+            .sidebar.active { transform: translateX(0); }
+            .main-content { margin-left: 0; }
+            .mobile-nav { display: flex; justify-content: space-between; align-items: center; }
+            .overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 999; }
+            .overlay.active { display: block; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="overlay" id="overlay"></div>
+
+<div class="mobile-nav">
+    <h4 class="mb-0"><i class="bi bi-leaf"></i> Krishi Mitra</h4>
+    <button class="btn text-white fs-3 p-0" id="menuToggle"><i class="bi bi-list"></i></button>
+</div>
+
+<div class="sidebar" id="sidebar">
+    <div class="p-4 text-center">
+        <h3 class="fw-bold"><i class="bi bi-leaf"></i> <span data-t="brand">Krishi Mitra</span></h3>
+    </div>
+    <nav>
+        <a href="farmer_dashboard.html"><i class="bi bi-speedometer2 me-2"></i> <span data-t="dashboard">Dashboard</span></a>
+        <a href="weather.html"><i class="bi bi-cloud-sun me-2"></i> <span data-t="weather_nav">Weather</span></a>
+        <a href="my_crops.html"><i class="bi bi-tree me-2"></i> <span data-t="my_crops_nav">My Crops</span></a>
+        <a href="all_crops_info.html"><i class="bi bi-journal-text me-2"></i> <span data-t="all_crops_info_nav">All Crops Info</span></a>
+        <a href="market_prices.html"><i class="bi bi-graph-up-arrow me-2"></i> <span data-t="market_prices_nav">Market Price</span></a>
+        <a href="notifications.html"><i class="bi bi-bell me-2"></i> <span data-t="notifications_nav">Notifications</span></a>
+        <a href="queries.html"><i class="bi bi-question-circle me-2"></i> <span data-t="my_queries">My Questions</span></a>
+        
+        <div class="bottom-links">
+            <a href="profile.html"><i class="bi bi-person-circle me-2"></i> <span data-t="profile_nav">Profile</span></a>
+            <a href="#" id="logoutBtn" class="text-danger"><i class="bi bi-box-arrow-right me-2"></i> <span data-t="logout">Logout</span></a>
+        </div>
+    </nav>
+</div>
+
+<div class="main-content">
+    <div class="container">
+        <h2 class="mb-4 fw-bold" data-t="crop_advisory">Crop Advisory</h2>
+        
+        <div class="row">
+            <div class="col-lg-5 mb-4">
+                <div class="card border-0 shadow-sm rounded-4 p-4">
+                    <h5 class="mb-4 fw-bold" data-t="get_recommendation">Get Recommendation</h5>
+                    <form id="advisoryForm">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold" data-t="soil_type_label">Soil Type</label>
+                            <select class="form-select" id="soilType" required>
+                                <option value="Alluvial">Alluvial</option>
+                                <option value="Black">Black</option>
+                                <option value="Red">Red</option>
+                                <option value="Laterite">Laterite</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold" data-t="soil_ph">Soil pH (Optional)</label>
+                            <input type="number" step="0.1" class="form-control" id="ph" placeholder="e.g. 6.5">
+                        </div>
+                        <button type="submit" class="btn btn-success w-100 py-2 rounded-3" data-t="get_advice">Get Advice</button>
+                    </form>
+                </div>
+            </div>
+
+            <div class="col-lg-7 mb-4">
+                <div class="card border-0 shadow-sm rounded-4 p-4 h-100">
+                    <h5 class="mb-4 fw-bold" data-t="recommendation_result">Recommendation Result</h5>
+                    <div id="advisoryPlaceholder" class="text-center py-5 text-muted">
+                        <i class="bi bi-lightbulb display-1"></i>
+                        <p class="mt-3" data-t="enter_details_prompt">Enter your soil details to get recommendations.</p>
+                    </div>
+                    <div id="advisoryResult" style="display: none;">
+                        <div class="p-4 bg-success bg-opacity-10 rounded-4 border-start border-4 border-success mb-4">
+                            <h4 class="fw-bold text-success mb-2" id="recommendedCrop">Wheat</h4>
+                            <p class="mb-0 text-muted">Based on your soil type and current season, this is the best crop for you.</p>
+                        </div>
+                        <h6 class="fw-bold mb-3" data-t="general_tips">General Tips</h6>
+                        <ul class="list-group list-group-flush" id="tipsList"></ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="translations.js"></script>
+<script>
+    // Sidebar Toggle
+    const menuToggle = document.getElementById('menuToggle');
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('overlay');
+
+    menuToggle.addEventListener('click', () => {
+        sidebar.classList.add('active');
+        overlay.classList.add('active');
+    });
+
+    overlay.addEventListener('click', () => {
+        sidebar.classList.remove('active');
+        overlay.classList.remove('active');
+    });
+
+    const user = JSON.parse(localStorage.getItem('user'));
+    if (!user || user.role !== 'farmer') window.location.href = 'login.html';
+
+    document.getElementById('advisoryForm').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const soilType = document.getElementById('soilType').value;
+        
+        let crop = 'Wheat';
+        let tips = [
+            'Prepare the field with 2-3 ploughings.',
+            'Use certified seeds for better yield.',
+            'Apply nitrogen in 3 split doses.',
+            'Maintain proper drainage to avoid waterlogging.'
+        ];
+
+        if (soilType === 'Black') {
+            crop = 'Cotton / Soybean';
+            tips = ['Deep ploughing is essential.', 'Maintain moisture during flowering.', 'Use bio-fertilizers.'];
+        } else if (soilType === 'Red') {
+            crop = 'Groundnut / Maize';
+            tips = ['Add organic manure to improve water retention.', 'Timely weeding is crucial.'];
+        }
+
+        document.getElementById('advisoryPlaceholder').style.display = 'none';
+        document.getElementById('advisoryResult').style.display = 'block';
+        document.getElementById('recommendedCrop').innerText = crop;
+        document.getElementById('tipsList').innerHTML = tips.map(t => `<li class="list-group-item bg-transparent px-0 border-0"><i class="bi bi-check2-circle text-success me-2"></i> ${t}</li>`).join('');
+    });
+
+    document.getElementById('logoutBtn').addEventListener('click', () => {
+        const lang = localStorage.getItem('krishi_mitra_lang') || 'en';
+        const t = translations[lang];
+        Swal.fire({
+            title: t.logout_confirm_title,
+            text: t.logout_confirm,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#28a745',
+            cancelButtonColor: '#d33',
+            confirmButtonText: t.logout
+        }).then((result) => {
+            if (result.isConfirmed) {
+                localStorage.removeItem('user');
+                window.location.href = 'index.html';
+            }
+        });
+    });
+</script>
+</body>
+</html>

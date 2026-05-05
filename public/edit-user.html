@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit User - Krishi Mitra</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f8f9fa; color: #333; margin: 0; padding-top: 100px; }
+        .card { border-radius: 12px; border: none; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        .form-label { font-weight: 600; color: #444; font-size: 0.9rem; text-transform: uppercase; }
+        .section-title { font-weight: 700; color: #1a531b; border-bottom: 2px solid #e9ecef; padding-bottom: 10px; margin-bottom: 20px; font-size: 1.2rem; }
+        .btn-success { background-color: #1a531b; border: none; }
+        .btn-success:hover { background-color: #134014; }
+        
+        .top-header { 
+            position: fixed; top: 0; left: 0; width: 100%; height: 60px; 
+            background: #fff; box-shadow: 0 2px 5px rgba(0,0,0,0.1); 
+            display: flex; justify-content: flex-end; align-items: center; 
+            padding: 0 20px; z-index: 9997; gap: 15px; 
+        }
+        .nav-row {
+            position: fixed; top: 60px; left: 0; width: 100%; height: 40px;
+            background: #f8f9fa; display: flex; justify-content: space-between;
+            align-items: center; padding: 0 20px; z-index: 9996;
+            border-bottom: 1px solid #ddd;
+        }
+    </style>
+</head>
+<body>
+    <div class="top-header">
+        <a href="admin_dashboard.html" onclick="showSection('admProfile', document.getElementById('navProfile'))"><i class="bi bi-person-circle fs-4 text-dark"></i></a>
+        <button class="btn btn-outline-success btn-sm" onclick="toggleLang()"><span id="langToggleText">Eng</span></button>
+        <button class="btn btn-danger btn-sm" onclick="handleLogout()">Logout</button>
+    </div>
+    
+    <div class="nav-row">
+        <button class="btn btn-link text-dark fw-bold text-decoration-none" onclick="history.back()">← वापस जाएं</button>
+        <button class="btn btn-link text-dark fw-bold text-decoration-none" onclick="window.location.href='admin_dashboard.html'">🏠 होम</button>
+    </div>
+
+    <div class="container pb-5" style="margin-top: 30px;">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h4 class="mb-0 fw-bold text-success" id="pageTitle" data-t="edit_profile">Edit Profile</h4>
+            
+            <div id="btnGroupView">
+                <button type="button" class="btn btn-primary rounded-pill fw-bold px-4" onclick="toggleEditMode(true)">
+                    <i class="bi bi-pencil me-2"></i> <span data-t="edit_profile_btn">Edit</span>
+                </button>
+            </div>
+            
+            <div id="btnGroupEdit" style="display: none;" class="d-flex gap-2">
+                <button type="button" class="btn btn-outline-danger rounded-pill fw-bold px-4" onclick="toggleEditMode(false)">
+                    <i class="bi bi-x-circle me-2"></i> <span data-t="cancel">Cancel</span>
+                </button>
+                <button type="button" class="btn btn-success rounded-pill fw-bold px-4" onclick="document.getElementById('editForm').requestSubmit()">
+                    <i class="bi bi-save me-2"></i> <span data-t="save_changes">Save Changes</span>
+                </button>
+            </div>
+        </div>
+        <form id="editForm" onsubmit="saveData(event)">
+        <!-- 1. Basic Info -->
+        <div class="card p-4 mb-4">
+            <h5 class="section-title">1. <span data-t="basic_info">Basic Information</span></h5>
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <label class="form-label" data-t="name">Name</label>
+                    <input type="text" id="name" class="form-control rounded-3" readonly required>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label" data-t="mobile_number">Mobile Number</label>
+                    <input type="text" id="mobile" class="form-control rounded-3" readonly required>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label" data-t="email_address">Email</label>
+                    <input type="email" id="email" class="form-control rounded-3" readonly>
+                </div>
+                <div class="col-md-12">
+                    <label class="form-label" data-t="security_answer_label">Security Question Answer</label>
+                    <input type="text" id="securityAnswer" class="form-control rounded-3" placeholder="" readonly>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. Farm Details -->
+        <div class="card p-4 mb-4">
+            <h5 class="section-title">2. <span data-t="input_details">Farm Details</span></h5>
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <label class="form-label" data-t="village_optional">Village</label>
+                    <input type="text" id="village" class="form-control rounded-3" readonly>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label" data-t="farm_size">Land Size (Acres)</label>
+                    <input type="number" step="0.1" id="landSize" class="form-control rounded-3" readonly>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label" data-t="soil_type_label">Soil Type</label>
+                    <select id="soilType" class="form-select rounded-3" disabled>
+                        <option value="Alluvial" data-t="alluvial">Alluvial</option>
+                        <option value="Black" data-t="black">Black</option>
+                        <option value="Red" data-t="red">Red</option>
+                        <option value="Laterite" data-t="laterite">Laterite</option>
+                        <option value="Desert" data-t="desert">Desert</option>
+                        <option value="" data-t="unknown">Unknown</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. User Crops and Progress -->
+        <div class="card p-4 mb-4">
+            <h5 class="section-title">3. <span data-t="my_crops_nav">Active Crops</span></h5>
+            
+            <div class="row g-4 border-bottom pb-4 mb-2">
+                <div class="col-md-12"><strong class="text-primary" data-t="current_crop">Crop 1</strong></div>
+                <div class="col-md-4">
+                    <label class="form-label" data-t="name_label">Crop Name</label>
+                    <input type="text" id="crop1Name" class="form-control rounded-3" placeholder="" readonly>
+                    <input type="hidden" id="crop1Id">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label" data-t="duration_label">Duration (Days)</label>
+                    <input type="number" id="crop1Dur" class="form-control rounded-3" value="120" readonly>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label" data-t="progress">Current Progress (%)</label>
+                    <input type="number" id="crop1Prog" class="form-control rounded-3" min="0" max="100" readonly>
+                </div>
+            </div>
+            
+            <div class="row g-4">
+                <div class="col-md-12"><strong class="text-primary" data-t="past_crops">Crop 2</strong></div>
+                <div class="col-md-4">
+                    <label class="form-label" data-t="name_label">Crop Name</label>
+                    <input type="text" id="crop2Name" class="form-control rounded-3" placeholder="" readonly>
+                    <input type="hidden" id="crop2Id">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label" data-t="duration_label">Duration (Days)</label>
+                    <input type="number" id="crop2Dur" class="form-control rounded-3" value="100" readonly>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label" data-t="progress">Current Progress (%)</label>
+                    <input type="number" id="crop2Prog" class="form-control rounded-3" min="0" max="100" readonly>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="translations.js"></script>
+<script>
+    let currentUserId = new URLSearchParams(window.location.search).get('id');
+    const users = JSON.parse(localStorage.getItem('users') || '[]');
+    let currentUser = users.find(u => u.id == currentUserId);
+    
+    // Admin specific log function
+    function logUserAction(userName, action, reason = '') {
+        let logs = JSON.parse(localStorage.getItem('admin_user_logs') || '[]');
+        const d = new Date();
+        logs.unshift({
+            userName,
+            action,
+            reason,
+            date: d.toLocaleDateString('en-GB'),
+            time: d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
+        });
+        localStorage.setItem('admin_user_logs', JSON.stringify(logs));
+    }
+
+    function initAuth() {
+        const admin = JSON.parse(localStorage.getItem('admin_user'));
+        if (!admin || admin.role !== 'admin') {
+            window.location.href = 'login.html';
+            return;
+        }
+    }
+
+    function goBack() {
+        window.location.href = 'admin_dashboard.html?section=users';
+    }
+
+    function toggleEditMode(isEdit) {
+        const viewBtn = document.getElementById('btnGroupView');
+        const editBtn = document.getElementById('btnGroupEdit');
+        const formElements = document.querySelectorAll('#editForm input, #editForm select');
+
+        if (isEdit) {
+            viewBtn.style.display = 'none';
+            editBtn.style.display = 'flex';
+            formElements.forEach(el => {
+                if (el.id !== 'crop1Id' && el.id !== 'crop2Id') {
+                    if(el.tagName === 'SELECT') {
+                        el.removeAttribute('disabled');
+                    } else {
+                        el.removeAttribute('readonly');
+                    }
+                }
+            });
+        } else {
+            viewBtn.style.display = 'block';
+            editBtn.style.display = 'none';
+            formElements.forEach(el => {
+                if(el.tagName === 'SELECT') {
+                    el.setAttribute('disabled', 'true');
+                } else {
+                    el.setAttribute('readonly', 'true');
+                }
+            });
+            // Revert changes by repopulating form
+            populateForm();
+        }
+    }
+
+    function init() {
+        initAuth();
+        if (!currentUserId || !currentUser) {
+            alert('User not found');
+            goBack();
+            return;
+        }
+        
+        if (currentUser.role === 'admin' || currentUser.role === 'System Admin') {
+            alert('System Admin profiles cannot be edited.');
+            goBack();
+            return;
+        }
+
+        populateForm();
+        toggleEditMode(false);
+        applyLocalTranslations();
+    }
+
+    function calcProgress(sowingDateStr, duration) {
+        if(!sowingDateStr || !duration) return 0;
+        let p = Math.round(( (new Date() - new Date(sowingDateStr)) / (1000*60*60*24) / duration ) * 100);
+        if(p < 0) p = 0;
+        if(p > 100) p = 100;
+        return p;
+    }
+
+    function createSowingDateFromProgress(progress, duration) {
+        if(!duration) duration = 100;
+        const daysPassed = (progress / 100) * duration;
+        const sowingDate = new Date(new Date().getTime() - (daysPassed * 24*60*60*1000));
+        return sowingDate.toISOString().split('T')[0];
+    }
+
+    function populateForm() {
+        document.getElementById('name').value = currentUser.name || '';
+        document.getElementById('mobile').value = currentUser.mobile || '';
+        document.getElementById('email').value = currentUser.email || '';
+        document.getElementById('securityAnswer').value = currentUser.securityAnswer || '';
+        document.getElementById('village').value = currentUser.village || '';
+        document.getElementById('landSize').value = currentUser.landSize || '';
+        document.getElementById('soilType').value = currentUser.soilType || '';
+
+        // Load specific user crops from currentCrops
+        const currentCrops = JSON.parse(localStorage.getItem('currentCrops') || '[]');
+        const uCrops = currentCrops.filter(c => c.farmer_id === currentUser.id);
+
+        if (uCrops.length > 0) {
+            document.getElementById('crop1Id').value = uCrops[0].id;
+            document.getElementById('crop1Name').value = uCrops[0].name || '';
+            document.getElementById('crop1Dur').value = uCrops[0].duration || 120;
+            document.getElementById('crop1Prog').value = calcProgress(uCrops[0].sowing_date, uCrops[0].duration);
+        }
+        if (uCrops.length > 1) {
+            document.getElementById('crop2Id').value = uCrops[1].id;
+            document.getElementById('crop2Name').value = uCrops[1].name || '';
+            document.getElementById('crop2Dur').value = uCrops[1].duration || 100;
+            document.getElementById('crop2Prog').value = calcProgress(uCrops[1].sowing_date, uCrops[1].duration);
+        }
+    }
+
+    function saveData(e) {
+        e.preventDefault();
+        const lang = localStorage.getItem('krishi_mitra_lang') || 'en';
+        
+        Swal.fire({
+            title: lang === 'hi' ? 'क्या आप यह जानकारी सेव करना चाहते हैं?' : 'Do you want to save this information?',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#1a531b',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: lang === 'hi' ? 'हाँ' : 'Yes',
+            cancelButtonText: lang === 'hi' ? 'नहीं' : 'No'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // Update User Info
+                currentUser.name = document.getElementById('name').value;
+                currentUser.mobile = document.getElementById('mobile').value;
+                currentUser.email = document.getElementById('email').value;
+                currentUser.securityAnswer = document.getElementById('securityAnswer').value;
+                currentUser.village = document.getElementById('village').value;
+                currentUser.landSize = document.getElementById('landSize').value;
+                currentUser.soilType = document.getElementById('soilType').value;
+
+                // Sync modified User into array
+                const idx = users.findIndex(u => u.id === currentUser.id);
+                if (idx !== -1) users[idx] = currentUser;
+                localStorage.setItem('users', JSON.stringify(users));
+
+                // Process Crops
+                let currentCrops = JSON.parse(localStorage.getItem('currentCrops') || '[]');
+                
+                // Helper to update/create crop
+                const processCrop = (cId, cName, cDur, cProg) => {
+                    if (cName) {
+                        let cropObj = currentCrops.find(c => c.id == cId);
+                        if (!cropObj) {
+                            cropObj = {
+                                id: Date.now() + Math.floor(Math.random()*100),
+                                farmer_id: currentUser.id,
+                                status: "Growing"
+                            };
+                            currentCrops.push(cropObj);
+                        }
+                        cropObj.name = cName;
+                        cropObj.duration = parseInt(cDur) || 100;
+                        cropObj.sowing_date = createSowingDateFromProgress(parseInt(cProg) || 0, cropObj.duration);
+                    }
+                };
+
+                processCrop(
+                    document.getElementById('crop1Id').value,
+                    document.getElementById('crop1Name').value,
+                    document.getElementById('crop1Dur').value,
+                    document.getElementById('crop1Prog').value
+                );
+
+                processCrop(
+                    document.getElementById('crop2Id').value,
+                    document.getElementById('crop2Name').value,
+                    document.getElementById('crop2Dur').value,
+                    document.getElementById('crop2Prog').value
+                );
+
+                localStorage.setItem('currentCrops', JSON.stringify(currentCrops));
+
+                // Logging
+                logUserAction(currentUser.name, 'Edit', 'Admin updated user details');
+
+                const successMsg = lang==='hi'?'सेव हो गया!':'Saved!';
+                Swal.fire({
+                    title: successMsg,
+                    icon: 'success',
+                    timer: 1500,
+                    showConfirmButton: false
+                }).then(() => {
+                    toggleEditMode(false);
+                });
+            }
+        });
+    }
+
+    function toggleLang() {
+        let lang = localStorage.getItem('krishi_mitra_lang') || 'en';
+        lang = lang === 'en' ? 'hi' : 'en';
+        localStorage.setItem('krishi_mitra_lang', lang);
+        applyLocalTranslations();
+    }
+
+    function applyLocalTranslations() {
+        const lang = localStorage.getItem('krishi_mitra_lang') || 'en';
+        document.getElementById('langToggleText').innerText = lang === 'en' ? 'हिंदी' : 'Eng';
+        const t = translations[lang];
+        if(!t) return;
+
+        document.querySelectorAll('[data-t]').forEach(el => {
+            const key = el.getAttribute('data-t');
+            if (t[key]) {
+                if (el.tagName === 'INPUT' && el.type === 'button') el.value = t[key];
+                else el.innerText = t[key];
+            }
+        });
+    }
+
+    window.onload = init;
+</script>
+</body>
+</html>

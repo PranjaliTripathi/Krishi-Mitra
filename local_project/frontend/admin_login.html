@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title data-t="admin_login_title">Krishi Mitra - Admin Login</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        body { background-color: #f0f2f5; }
+        .login-container { max-width: 400px; margin-top: 100px; }
+        .card { border: none; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        .btn-dark { background-color: #0d230e; border: none; }
+        .brand-logo { color: #0d230e; font-size: 2rem; font-weight: bold; }
+        .lang-switch { position: absolute; top: 20px; right: 20px; }
+    </style>
+</head>
+<body>
+
+<div class="lang-switch">
+    <button class="btn btn-outline-dark btn-sm" onclick="toggleLanguage()">
+        <i class="bi bi-translate"></i> <span id="langToggleText">हिंदी</span>
+    </button>
+</div>
+
+<div class="container login-container">
+    <div class="text-center mb-4">
+        <div class="brand-logo"><i class="bi bi-shield-lock"></i> <span data-t="admin_panel">Admin Portal</span></div>
+        <p class="text-muted" data-t="brand">Krishi Mitra Management System</p>
+    </div>
+    <div class="card p-4">
+        <h4 class="text-center mb-4" data-t="admin_login_title">Admin Login</h4>
+        <form id="adminLoginForm">
+            <div class="mb-3">
+                <label class="form-label" data-t="email_mobile_label">Admin Email/Mobile</label>
+                <input type="text" class="form-control" id="email_mobile" required>
+            </div>
+            <div class="mb-3">
+                <label class="form-label" data-t="password_label">Password</label>
+                <div class="input-group">
+                    <input type="password" class="form-control" id="password" required>
+                    <button class="btn btn-outline-secondary" type="button" id="togglePassword">
+                        <i class="bi bi-eye"></i>
+                    </button>
+                </div>
+            </div>
+            <button type="submit" class="btn btn-dark w-100 py-2" data-t="admin_login_btn">Login as Admin</button>
+        </form>
+        <div class="text-center mt-3">
+            <a href="index.html" class="text-muted small" data-t="back_to_farmer_login">Back to Farmer Login</a>
+        </div>
+    </div>
+</div>
+
+<script src="translations.js"></script>
+<script>
+    function toggleLanguage() {
+        const currentLang = localStorage.getItem('krishi_mitra_lang') || 'en';
+        setLanguage(currentLang === 'en' ? 'hi' : 'en');
+    }
+
+    // Toggle Password Visibility
+    document.getElementById('togglePassword').addEventListener('click', function() {
+        const passwordInput = document.getElementById('password');
+        const icon = this.querySelector('i');
+        if (passwordInput.type === 'password') {
+            passwordInput.type = 'text';
+            icon.classList.replace('bi-eye', 'bi-eye-slash');
+        } else {
+            passwordInput.type = 'password';
+            icon.classList.replace('bi-eye-slash', 'bi-eye');
+        }
+    });
+
+    document.getElementById('adminLoginForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const email_mobile = document.getElementById('email_mobile').value;
+        const password = document.getElementById('password').value;
+        const lang = localStorage.getItem('krishi_mitra_lang') || 'en';
+        const t = translations[lang];
+
+        try {
+            const response = await fetch('http://localhost:5000/admin/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email_mobile, password })
+            });
+            const data = await response.json();
+            if (response.ok) {
+                if (data.user.role !== 'admin') {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Access Denied',
+                        text: 'Not an admin account',
+                        confirmButtonColor: '#0d230e'
+                    });
+                    return;
+                }
+                localStorage.setItem('token', data.token);
+                localStorage.setItem('user', JSON.stringify(data.user));
+                window.location.href = 'admin_dashboard.html';
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Oops...',
+                    text: t.invalid_credentials || data.error,
+                    confirmButtonColor: '#0d230e'
+                });
+            }
+        } catch (err) {
+            console.error(err);
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Login failed. Make sure backend is running on port 5000.',
+                confirmButtonColor: '#0d230e'
+            });
+        }
+    });
+</script>
+</body>
+</html>

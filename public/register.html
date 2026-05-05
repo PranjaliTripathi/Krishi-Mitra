@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title data-t="register_title">Krishi Mitra - Register</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        :root { --primary-green: #1a531b; --secondary-green: #2e7d32; }
+        body { 
+            background: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url('https://picsum.photos/seed/farm2/1920/1080');
+            background-size: cover;
+            background-position: center;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding: 40px 0;
+        }
+        .register-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            width: 100%;
+            max-width: 500px;
+            padding: 40px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+        }
+        .form-control, .form-select { border-radius: 10px; padding: 10px; }
+        .btn-success { background: var(--primary-green); border: none; padding: 12px; border-radius: 10px; font-weight: bold; }
+        .btn-success:hover { background: var(--secondary-green); }
+        .lang-switch { position: fixed; top: 20px; right: 20px; }
+    </style>
+</head>
+<body>
+
+<div class="lang-switch">
+    <button class="btn btn-light btn-sm shadow-sm rounded-pill px-3" onclick="window.toggleLang()">
+        <i class="bi bi-translate me-1"></i> <span id="langToggleText">हिंदी</span>
+    </button>
+</div>
+
+<div class="register-card mx-3">
+    <div class="text-center mb-4">
+        <h2 class="fw-bold text-success"><i class="bi bi-leaf"></i> <span data-t="brand">Krishi Mitra</span></h2>
+        <div class="alert alert-success py-2 mb-3">
+            <p class="mb-0 fw-bold text-dark" style="font-size: 0.95rem;" data-t="welcome_msg_1">Welcome to Krishi Mitra. Thank you for visiting our portal.</p>
+        </div>
+        <p class="text-muted fw-bold" data-t="new_farmer_registration">New Farmer Registration</p>
+    </div>
+
+    <form id="registerForm">
+        <div class="mb-3">
+            <label class="form-label small fw-bold" data-t="name_label">Full Name</label>
+            <input type="text" class="form-control bg-light" id="name" required>
+        </div>
+        <div class="mb-3">
+            <label class="form-label small fw-bold" data-t="mobile_number">Mobile Number</label>
+            <input type="text" class="form-control bg-light" id="mobile" pattern="\d{10}" maxlength="10">
+        </div>
+        <div class="mb-3">
+            <label class="form-label small fw-bold" data-t="email_address">Email</label>
+            <input type="email" class="form-control bg-light" id="email" maxlength="50">
+        </div>
+        <div class="mb-3">
+            <label class="form-label small fw-bold" data-t="enter_new_password">Enter New Password</label>
+            <div class="input-group">
+                <input type="password" class="form-control bg-light border-end-0" id="password" required>
+                <button class="btn btn-light border border-start-0" type="button" onclick="togglePasswordVisibility('password', this)" style="border-radius: 0 10px 10px 0;">
+                    <i class="bi bi-eye"></i>
+                </button>
+            </div>
+        </div>
+        <div class="mb-3">
+            <label class="form-label small fw-bold" data-t="confirm_password">Confirm Password</label>
+            <div class="input-group">
+                <input type="password" class="form-control bg-light border-end-0" id="confirm_password" required>
+                <button class="btn btn-light border border-start-0" type="button" onclick="togglePasswordVisibility('confirm_password', this)" style="border-radius: 0 10px 10px 0;">
+                    <i class="bi bi-eye"></i>
+                </button>
+            </div>
+        </div>
+        <div class="mb-3">
+            <label class="form-label small fw-bold" data-t="security_question_label">Security Question</label>
+            <select class="form-select bg-light" id="security_question" required>
+                <option value="" data-t="select_question">Select a question</option>
+                <option value="What is your pet's name?" data-t="security_q1">What is your pet's name?</option>
+                <option value="What is your birth city?" data-t="security_q2">What is your birth city?</option>
+                <option value="What is your favorite crop?" data-t="security_q3">What is your favorite crop?</option>
+            </select>
+        </div>
+        <div class="mb-4">
+            <label class="form-label small fw-bold" data-t="security_answer_label">Your Answer</label>
+            <input type="text" class="form-control bg-light" id="security_answer" required>
+        </div>
+        
+        <button type="submit" class="btn btn-success w-100 mb-3" data-t="register_btn">Register</button>
+        <div class="text-center">
+            <a href="login.html" class="text-muted text-decoration-none small" data-t="back_to_login">Back to Login</a>
+        </div>
+    </form>
+</div>
+
+<script src="translations.js"></script>
+<script src="password_validator.js"></script>
+<script>
+        function togglePasswordVisibility(inputId, btn) {
+        const passwordInput = document.getElementById(inputId);
+        const icon = btn.querySelector('i');
+        if (passwordInput.type === 'password') {
+            passwordInput.type = 'text';
+            icon.classList.replace('bi-eye', 'bi-eye-slash');
+        } else {
+            passwordInput.type = 'password';
+            icon.classList.replace('bi-eye-slash', 'bi-eye');
+        }
+    }
+
+    document.getElementById('registerForm').addEventListener('submit', (e) => {
+        e.preventDefault();
+        
+        const mobile = document.getElementById('mobile').value;
+        const email = document.getElementById('email').value;
+
+        const lang = localStorage.getItem('krishi_mitra_lang') || 'en';
+        const t = translations[lang];
+
+        if (!mobile && !email) {
+            Swal.fire({
+                icon: 'warning',
+                title: t.required_field,
+                text: t.mobile_or_email_required || "Either Mobile or Email is required",
+                confirmButtonColor: '#1a531b'
+            });
+            return;
+        }
+
+        if (mobile && !/^\d{10}$/.test(mobile)) {
+            Swal.fire({
+                icon: 'warning',
+                title: t.invalid_input,
+                text: t.invalid_mobile || "Mobile number must be exactly 10 digits",
+                confirmButtonColor: '#1a531b'
+            });
+            return;
+        }
+
+        const password = document.getElementById('password').value;
+        const passErr = window.getPasswordError(password);
+        if (passErr) {
+            Swal.fire({ icon: 'error', title: 'Invalid Password', text: passErr });
+            return;
+        }
+        const confirm_password = document.getElementById('confirm_password').value;
+        const secAnswer = document.getElementById('security_answer').value;
+        if (secAnswer.length < 6) {
+            Swal.fire({ icon: 'error', title: 'Invalid Security Answer', text: 'Answer must be at least 6 characters.' });
+            return;
+        }
+
+        if (password !== confirm_password) {
+            Swal.fire({
+                icon: 'error',
+                title: t.password_mismatch,
+                text: t.passwords_not_match || 'Passwords do not match. Please try again.',
+                confirmButtonColor: '#1a531b'
+            });
+            return;
+        }
+
+        const email_mobile_val = mobile || email;
+
+        const userData = {
+            id: Date.now(),
+            name: document.getElementById('name').value,
+            mobile: mobile,
+            email: email,
+            email_mobile: email_mobile_val,
+            land_size: '', // Removed from registration, to be set in profile
+            soil_type: '', // Removed from registration, to be set in profile
+            password: password,
+            security_question: document.getElementById('security_question').value,
+            security_answer: document.getElementById('security_answer').value,
+            role: 'farmer',
+            joined_at: new Date().toISOString()
+        };
+
+        // Unified Storage: Save to localStorage
+        const users = JSON.parse(localStorage.getItem('users') || '[]');
+        
+        if (users.some(u => (mobile && u.mobile === mobile) || (email && u.email === email) || (u.email_mobile === email_mobile_val))) {
+            Swal.fire({
+                icon: 'warning',
+                title: t.error_title || 'Error',
+                text: t.user_exists,
+                confirmButtonColor: '#1a531b'
+            });
+            return;
+        }
+
+        users.push(userData);
+        localStorage.setItem('users', JSON.stringify(users));
+
+        Swal.fire({
+            icon: 'success',
+            title: t.registration_success,
+            text: t.registration_success,
+            confirmButtonColor: '#1a531b'
+        }).then(() => {
+            window.location.href = 'login.html';
+        });
+    });
+</script>
+</body>
+</html>

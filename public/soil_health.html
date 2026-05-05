@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title data-t="soil_health">Krishi Mitra - Soil Health</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        :root { --primary-green: #1a531b; --secondary-green: #2e7d32; }
+        body { background-color: #f0f2f5; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        .sidebar { height: 100vh; background: var(--primary-green); color: white; position: fixed; width: 250px; transition: all 0.3s; z-index: 1000; }
+        .sidebar a { color: #cfdfcf; text-decoration: none; padding: 12px 20px; display: block; transition: 0.2s; border-radius: 8px; margin: 4px 10px; }
+        .sidebar a:hover, .sidebar a.active { background: var(--secondary-green); color: white; }
+        .sidebar .bottom-links { position: absolute; bottom: 20px; width: 100%; }
+        .main-content { margin-left: 250px; padding: 20px; transition: all 0.3s; }
+        .mobile-nav { display: none; background: var(--primary-green); color: white; padding: 10px 20px; position: sticky; top: 0; z-index: 1001; }
+        @media (max-width: 768px) {
+            .sidebar { transform: translateX(-100%); width: 250px; }
+            .sidebar.active { transform: translateX(0); }
+            .main-content { margin-left: 0; }
+            .mobile-nav { display: flex; justify-content: space-between; align-items: center; }
+            .overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 999; }
+            .overlay.active { display: block; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="overlay" id="overlay"></div>
+
+<div class="mobile-nav">
+    <h4 class="mb-0"><i class="bi bi-leaf"></i> Krishi Mitra</h4>
+    <button class="btn text-white fs-3 p-0" id="menuToggle"><i class="bi bi-list"></i></button>
+</div>
+
+<div class="sidebar" id="sidebar">
+    <div class="p-4 text-center">
+        <h3 class="fw-bold"><i class="bi bi-leaf"></i> <span data-t="brand">Krishi Mitra</span></h3>
+    </div>
+    <nav>
+        <a href="farmer_dashboard.html"><i class="bi bi-speedometer2 me-2"></i> <span data-t="dashboard">Dashboard</span></a>
+        <a href="weather.html"><i class="bi bi-cloud-sun me-2"></i> <span data-t="weather_nav">Weather</span></a>
+        <a href="my_crops.html"><i class="bi bi-tree me-2"></i> <span data-t="my_crops_nav">My Crops</span></a>
+        <a href="all_crops_info.html"><i class="bi bi-journal-text me-2"></i> <span data-t="all_crops_info_nav">All Crops Info</span></a>
+        <a href="market_prices.html"><i class="bi bi-graph-up-arrow me-2"></i> <span data-t="market_prices_nav">Market Price</span></a>
+        <a href="notifications.html"><i class="bi bi-bell me-2"></i> <span data-t="notifications_nav">Notifications</span></a>
+        <a href="queries.html"><i class="bi bi-question-circle me-2"></i> <span data-t="my_queries">My Questions</span></a>
+        
+        <div class="bottom-links">
+            <a href="profile.html"><i class="bi bi-person-circle me-2"></i> <span data-t="profile_nav">Profile</span></a>
+            <a href="#" id="logoutBtn" class="text-danger"><i class="bi bi-box-arrow-right me-2"></i> <span data-t="logout">Logout</span></a>
+        </div>
+    </nav>
+</div>
+
+<div class="main-content">
+    <div class="container">
+        <h2 class="mb-4 fw-bold" data-t="soil_health_title">Soil Health Analysis</h2>
+        
+        <div class="row">
+            <div class="col-lg-5 mb-4">
+                <div class="card border-0 shadow-sm rounded-4 p-4">
+                    <h5 class="mb-4 fw-bold" data-t="test_soil">Test Soil</h5>
+                    <form id="soilForm">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">pH Level</label>
+                            <input type="number" step="0.1" class="form-control" id="pH" placeholder="e.g. 6.5" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold" data-t="nitrogen">Nitrogen (N)</label>
+                            <input type="number" class="form-control" id="nitrogen" placeholder="mg/kg" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold" data-t="phosphorus">Phosphorus (P)</label>
+                            <input type="number" class="form-control" id="phosphorus" placeholder="mg/kg" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold" data-t="potassium">Potassium (K)</label>
+                            <input type="number" class="form-control" id="potassium" placeholder="mg/kg" required>
+                        </div>
+                        <button type="submit" class="btn btn-success w-100 py-2 rounded-3" data-t="test_soil">Test Soil</button>
+                    </form>
+                </div>
+            </div>
+
+            <div class="col-lg-7 mb-4">
+                <div class="card border-0 shadow-sm rounded-4 p-4 h-100">
+                    <h5 class="mb-4 fw-bold" data-t="analysis_result">Analysis Result</h5>
+                    <div id="soilPlaceholder" class="text-center py-5 text-muted">
+                        <i class="bi bi-clipboard-data display-1"></i>
+                        <p class="mt-3" data-t="enter_soil_params">Enter soil parameters to see analysis.</p>
+                    </div>
+                    <div id="soilResult" style="display: none;">
+                        <div class="row mb-4">
+                            <div class="col-md-12">
+                                <div class="p-3 bg-light rounded-3 border-start border-4 border-success">
+                                    <h6 class="fw-bold" data-t="suggestions">Suggestions</h6>
+                                    <p id="suggestionText" class="mb-0"></p>
+                                </div>
+                            </div>
+                        </div>
+                        <div style="height: 300px;">
+                            <canvas id="soilChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mt-4">
+            <div class="col-md-12">
+                <div class="card border-0 shadow-sm rounded-4 p-4">
+                    <h5 class="mb-4 fw-bold" data-t="soil_history">Soil Test History</h5>
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th data-t="test_date">Test Date</th>
+                                    <th>pH</th>
+                                    <th data-t="nitrogen">N</th>
+                                    <th data-t="phosphorus">P</th>
+                                    <th data-t="potassium">K</th>
+                                    <th data-t="suggestions">Suggestions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="historyTableBody"></tbody>
+                        </table>
+                    </div>
+                    <div id="noHistoryMsg" class="text-center text-muted py-3" style="display: none;">
+                        <p data-t="no_history">No previous soil tests found.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="translations.js"></script>
+<script>
+    // Sidebar Toggle
+    const menuToggle = document.getElementById('menuToggle');
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('overlay');
+
+    menuToggle.addEventListener('click', () => {
+        sidebar.classList.add('active');
+        overlay.classList.add('active');
+    });
+
+    overlay.addEventListener('click', () => {
+        sidebar.classList.remove('active');
+        overlay.classList.remove('active');
+    });
+
+    const user = JSON.parse(localStorage.getItem('user'));
+    if (!user || user.role !== 'farmer') window.location.href = 'login.html';
+
+    function loadHistory() {
+        const history = JSON.parse(localStorage.getItem('demo_soil_history') || '[]')
+            .filter(h => h.farmer_id === user.id)
+            .sort((a, b) => new Date(b.date) - new Date(a.date));
+
+        const tableBody = document.getElementById('historyTableBody');
+        const noHistoryMsg = document.getElementById('noHistoryMsg');
+
+        if (history.length === 0) {
+            tableBody.innerHTML = '';
+            noHistoryMsg.style.display = 'block';
+            return;
+        }
+
+        noHistoryMsg.style.display = 'none';
+        tableBody.innerHTML = history.map(h => `
+            <tr>
+                <td>${new Date(h.date).toLocaleDateString()}</td>
+                <td>${h.pH}</td>
+                <td>${h.nitrogen}</td>
+                <td>${h.phosphorus}</td>
+                <td>${h.potassium}</td>
+                <td><small>${h.suggestion}</small></td>
+            </tr>
+        `).join('');
+    }
+
+    document.getElementById('soilForm').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const formData = {
+            farmer_id: user.id,
+            pH: parseFloat(document.getElementById('pH').value),
+            nitrogen: parseFloat(document.getElementById('nitrogen').value),
+            phosphorus: parseFloat(document.getElementById('phosphorus').value),
+            potassium: parseFloat(document.getElementById('potassium').value),
+            date: new Date().toISOString()
+        };
+
+        const lang = localStorage.getItem('krishi_mitra_lang') || 'en';
+        const t = translations[lang];
+
+        let suggestion = t.soil_suggestion_good;
+        if (formData.pH < 6) suggestion = t.soil_suggestion_acidic;
+        if (formData.nitrogen < 50) suggestion = t.soil_suggestion_n_low;
+        if (formData.phosphorus < 20) suggestion = t.soil_suggestion_p_low;
+        
+        formData.suggestion = suggestion;
+
+        const history = JSON.parse(localStorage.getItem('demo_soil_history') || '[]');
+        history.push(formData);
+        localStorage.setItem('demo_soil_history', JSON.stringify(history));
+
+        document.getElementById('soilPlaceholder').style.display = 'none';
+        document.getElementById('soilResult').style.display = 'block';
+        document.getElementById('suggestionText').innerText = suggestion;
+        
+        const ctx = document.getElementById('soilChart').getContext('2d');
+        if (window.mySoilChart) window.mySoilChart.destroy();
+        
+        window.mySoilChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: ['Nitrogen (N)', 'Phosphorus (P)', 'Potassium (K)'],
+                datasets: [
+                    {
+                        label: t.your_soil_data,
+                        data: [formData.nitrogen, formData.phosphorus, formData.potassium],
+                        backgroundColor: ['rgba(40, 167, 69, 0.7)', 'rgba(255, 193, 7, 0.7)', 'rgba(23, 162, 184, 0.7)'],
+                        borderColor: ['#28a745', '#ffc107', '#17a2b8'],
+                        borderWidth: 2,
+                        borderRadius: 8
+                    },
+                    {
+                        label: t.ideal_soil_data,
+                        data: [150, 50, 180],
+                        type: 'line',
+                        borderColor: 'rgba(0, 0, 0, 0.2)',
+                        borderDash: [5, 5],
+                        fill: false
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: { y: { beginAtZero: true } }
+            }
+        });
+
+        loadHistory();
+    });
+
+    document.getElementById('logoutBtn').addEventListener('click', () => {
+        const lang = localStorage.getItem('krishi_mitra_lang') || 'en';
+        const t = translations[lang];
+        Swal.fire({
+            title: t.logout_confirm_title,
+            text: t.logout_confirm,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#28a745',
+            cancelButtonColor: '#d33',
+            confirmButtonText: t.logout
+        }).then((result) => {
+            if (result.isConfirmed) {
+                localStorage.removeItem('user');
+                window.location.href = 'index.html#top';
+            }
+        });
+    });
+
+    loadHistory();
+</script>
+</body>
+</html>

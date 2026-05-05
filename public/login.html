@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title data-t="login_title">Krishi Mitra - Login</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        :root { --primary-green: #1a531b; --secondary-green: #2e7d32; }
+        body { 
+            background: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url('https://picsum.photos/seed/farm/1920/1080');
+            background-size: cover;
+            background-position: center;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            position: relative;
+        }
+        .login-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            width: 100%;
+            max-width: 400px;
+            padding: 40px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+        }
+        .form-control { border-radius: 10px; padding: 12px; }
+        .btn-success { background: var(--primary-green); border: none; padding: 12px; border-radius: 10px; font-weight: bold; }
+        .btn-success:hover { background: var(--secondary-green); }
+        .lang-switch { position: fixed; top: 20px; right: 20px; }
+        .back-home { position: fixed; top: 20px; left: 20px; }
+    </style>
+</head>
+<body>
+
+<div class="back-home">
+    <a href="index.html" class="btn btn-light btn-sm shadow-sm rounded-pill px-3 text-dark text-decoration-none">
+        <i class="bi bi-arrow-left me-1"></i> <span data-t="back_home_btn">Home</span>
+    </a>
+</div>
+
+<div class="lang-switch">
+    <button class="btn btn-light btn-sm shadow-sm rounded-pill px-3" onclick="window.toggleLang()">
+        <i class="bi bi-translate me-1"></i> <span id="langToggleText">हिंदी</span>
+    </button>
+</div>
+
+<div class="login-card mx-3">
+    <div class="text-center mb-4">
+        <h2 class="fw-bold text-success"><i class="bi bi-leaf"></i> Krishi Mitra</h2>
+        <p class="text-muted" data-t="login_title">Farmer Login</p>
+    </div>
+
+    <form id="loginForm">
+        <div class="mb-3">
+            <label class="form-label small fw-bold" data-t="email_mobile_label">Email or Mobile</label>
+            <div class="input-group">
+                <span class="input-group-text bg-light border-end-0"><i class="bi bi-person"></i></span>
+                <input type="text" class="form-control border-start-0 bg-light" id="email_mobile" maxlength="50" required>
+            </div>
+        </div>
+        <div class="mb-3">
+            <label class="form-label small fw-bold" data-t="password_label">Password</label>
+            <div class="input-group">
+                <span class="input-group-text bg-light border-end-0"><i class="bi bi-lock"></i></span>
+                <input type="password" class="form-control border-start-0 border-end-0 bg-light" id="password" required>
+                <button class="btn btn-light border border-start-0" type="button" onclick="togglePasswordVisibility('password', this)" style="border-radius: 0 10px 10px 0;">
+                    <i class="bi bi-eye"></i>
+                </button>
+            </div>
+        </div>
+        <div class="text-end mb-3">
+            <a href="forgot_password.html" class="text-success text-decoration-none small" data-t="forgot_password_link">Forgot Password?</a>
+        </div>
+        <button type="submit" class="btn btn-success w-100 mb-3" data-t="login_btn">Login</button>
+        <div class="text-center">
+            <a href="register.html" class="text-muted text-decoration-none small" data-t="new_farmer_link">New farmer? Register here</a>
+        </div>
+    </form>
+</div>
+
+<script src="translations.js"></script>
+<script src="crops_data.js"></script>
+
+<script>
+    // Data Synchronization Check
+    if (!localStorage.getItem('admin_crops')) {
+        localStorage.setItem('admin_crops', JSON.stringify(cropsData));
+    }
+
+        function togglePasswordVisibility(inputId, btn) {
+        const passwordInput = document.getElementById(inputId);
+        const icon = btn.querySelector('i');
+        if (passwordInput.type === 'password') {
+            passwordInput.type = 'text';
+            icon.classList.replace('bi-eye', 'bi-eye-slash');
+        } else {
+            passwordInput.type = 'password';
+            icon.classList.replace('bi-eye-slash', 'bi-eye');
+        }
+    }
+
+    document.getElementById('loginForm').addEventListener('submit', (e) => {
+        e.preventDefault();
+        let email = document.getElementById('email_mobile').value;
+        let password = document.getElementById('password').value;
+        
+
+        // Unified User Data Management
+        if (!localStorage.getItem('users')) {
+            // Migrate from demo_users if exists, else init empty
+            const oldUsers = JSON.parse(localStorage.getItem('demo_users') || '[]');
+            localStorage.setItem('users', JSON.stringify(oldUsers));
+        }
+
+        let users = JSON.parse(localStorage.getItem('users')) || [];
+
+        let user = users.find(u => 
+            (u.email_mobile === email || u.mobile === email || u.email === email) && 
+            u.password === password
+        );
+
+        const lang = localStorage.getItem('krishi_mitra_lang') || 'en';
+        const t = translations[lang];
+
+        if(user){
+            localStorage.setItem("currentUser", JSON.stringify(user));
+            
+            if (user.role === "admin") {
+                localStorage.setItem("admin_user", JSON.stringify(user));
+                window.location.href = "admin_dashboard.html";
+            } else if (user.role === "farmer") {
+                localStorage.setItem("user", JSON.stringify(user));
+                window.location.href = "farmer_dashboard.html";
+            } else {
+                localStorage.setItem("user", JSON.stringify(user));
+                window.location.href = "index.html";
+            }
+        } else {
+            Swal.fire({
+                icon: 'error',
+                title: t.error_title || 'Error',
+                text: t.invalid_login,
+                confirmButtonColor: '#1a531b'
+            });
+        }
+    });
+</script>
+</body>
+</html>

@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title data-t="weather_nav">Krishi Mitra - Weather</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        :root { --primary-green: #1a531b; --secondary-green: #2e7d32; }
+        body { background-color: #f0f2f5; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        .sidebar { height: 100vh; background: var(--primary-green); color: white; position: fixed; width: 250px; transition: all 0.3s; z-index: 1000; }
+        .sidebar a { color: #cfdfcf; text-decoration: none; padding: 12px 20px; display: block; transition: 0.2s; border-radius: 8px; margin: 4px 10px; }
+        .sidebar a:hover, .sidebar a.active { background: var(--secondary-green); color: white; }
+        .sidebar .bottom-links { position: absolute; bottom: 20px; width: 100%; }
+        .main-content { margin-left: 250px; padding: 20px; transition: all 0.3s; }
+        .mobile-nav { display: none; background: var(--primary-green); color: white; padding: 10px 20px; position: sticky; top: 0; z-index: 1001; }
+        
+        /* Weather Card Improvements */
+        .weather-card { 
+            background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+            border: 1px solid rgba(0,0,0,0.05);
+        }
+        .weather-value-box {
+            background: rgba(26, 83, 27, 0.05);
+            border: 1px solid rgba(26, 83, 27, 0.1);
+            transition: all 0.3s;
+        }
+        .weather-value-box:hover {
+            background: rgba(26, 83, 27, 0.1);
+            transform: translateY(-2px);
+        }
+        .weather-label { color: #555; font-size: 0.85rem; font-weight: 500; }
+        .weather-value { color: var(--primary-green); font-weight: 700; font-size: 1.5rem; }
+        .range-badge { font-size: 0.7rem; padding: 2px 8px; border-radius: 10px; font-weight: bold; margin-top: 4px; display: inline-block; }
+        .range-normal { background: #e8f5e9; color: #2e7d32; }
+        .range-low { background: #e3f2fd; color: #1565c0; }
+        .range-high { background: #fff3e0; color: #e65100; }
+        .range-abnormal { background: #ffebee; color: #c62828; animation: pulse 2s infinite; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.7; } 100% { opacity: 1; } }
+
+        /* Rainfall Details */
+        .rainfall-details { margin-top: 20px; }
+        .alert-box { border-radius: 12px; padding: 15px; margin-bottom: 15px; border-left: 5px solid; }
+        .alert-warning { background: #fff3cd; border-color: #ffc107; color: #856404; }
+        .alert-info { background: #d1ecf1; border-color: #17a2b8; color: #0c5460; }
+        .alert-danger { background: #f8d7da; border-color: #dc3545; color: #721c24; }
+        @media (max-width: 768px) {
+            .sidebar { transform: translateX(-100%); width: 250px; }
+            .sidebar.active { transform: translateX(0); }
+            .main-content { margin-left: 0; }
+            .mobile-nav { display: flex; justify-content: space-between; align-items: center; }
+            .overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 999; }
+            .overlay.active { display: block; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="overlay" id="overlay"></div>
+
+<div class="mobile-nav">
+    <h4 class="mb-0"><i class="bi bi-leaf"></i> Krishi Mitra</h4>
+    <button class="btn text-white fs-3 p-0" id="menuToggle"><i class="bi bi-list"></i></button>
+</div>
+
+<div class="sidebar" id="sidebar">
+    <div class="p-4 text-center">
+        <h3 class="fw-bold"><i class="bi bi-leaf"></i> <span data-t="brand">Krishi Mitra</span></h3>
+    </div>
+    <nav>
+        <a href="farmer_dashboard.html"><i class="bi bi-speedometer2 me-2"></i> <span data-t="dashboard">Dashboard</span></a>
+        <a href="weather.html" class="active"><i class="bi bi-cloud-sun me-2"></i> <span data-t="weather_nav">Weather</span></a>
+        <a href="my_crops.html"><i class="bi bi-tree me-2"></i> <span data-t="my_crops_nav">My Crops</span></a>
+        <a href="all_crops_info.html"><i class="bi bi-journal-text me-2"></i> <span data-t="all_crops_info_nav">Smart Crop Information</span></a>
+        <a href="schemes.html"><i class="bi bi-award me-2"></i> <span data-t="schemes_nav">Schemes</span></a>
+        <a href="market_prices.html"><i class="bi bi-graph-up-arrow me-2"></i> <span data-t="market_prices_nav">Market Price</span></a>
+        <a href="notifications.html"><i class="bi bi-bell me-2"></i> <span data-t="notifications_nav">Notifications</span></a>
+        <a href="queries.html"><i class="bi bi-question-circle me-2"></i> <span data-t="my_queries">My Questions</span></a>
+        
+        <div class="bottom-links">
+            <a href="profile.html"><i class="bi bi-person-circle me-2"></i> <span data-t="profile_nav">Profile</span></a>
+            <a href="#" id="logoutBtn" class="text-danger"><i class="bi bi-box-arrow-right me-2"></i> <span data-t="logout">Logout</span></a>
+        </div>
+    </nav>
+</div>
+
+<div class="main-content">
+    <div class="container">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="mb-0 fw-bold" data-t="weather_nav">Weather</h2>
+            
+        </div>
+        
+        <!-- Current Weather -->
+        <div class="row mb-4">
+            <div class="col-md-12">
+                <div class="card weather-card p-4 rounded-4 shadow-sm">
+                    <div class="row align-items-center">
+                        <div class="col-md-6">
+                            <h5 class="text-muted mb-1" data-t="current_weather">Current Weather</h5>
+                            <p class="text-primary fw-bold mb-2" id="currentDateDisplay"></p>
+                            <h1 class="display-1 fw-bold mb-0 text-dark" id="currentTemp">32°C</h1>
+                            <p class="fs-4 mb-0 text-success"><i class="bi bi-sun-fill text-warning"></i> <span id="weatherStatus">Sunny</span></p>
+                            <p class="text-muted" id="weatherFullLoc">Indore, Madhya Pradesh</p>
+                        </div>
+                        <div class="col-md-6 text-md-end">
+                            <div class="row g-3">
+                                <div class="col-6">
+                                    <div class="p-3 weather-value-box rounded-3">
+                                        <span class="weather-value" id="valHumidity">45%</span>
+                                        <small class="d-block weather-label" data-t="humidity_label">Humidity</small>
+                                        <span id="rangeHumidity" class="range-badge"></span>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="p-3 weather-value-box rounded-3">
+                                        <span class="weather-value" id="valWind">12 km/h</span>
+                                        <small class="d-block weather-label" data-t="wind_speed_label">Wind Speed</small>
+                                        <span id="rangeWind" class="range-badge"></span>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="p-3 weather-value-box rounded-3">
+                                        <span class="weather-value" id="valRain">8 mm</span>
+                                        <small class="d-block weather-label" data-t="rainfall_label">Rainfall</small>
+                                        <span id="rangeRain" class="range-badge"></span>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="p-3 weather-value-box rounded-3">
+                                        <span class="weather-value" id="valPressure">1012 hPa</span>
+                                        <small class="d-block weather-label" data-t="pressure_label">Pressure</small>
+                                        <span id="rangePressure" class="range-badge"></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Rainfall Details Section -->
+        <div class="rainfall-details" id="rainfallDetails">
+            <div class="card border-0 shadow-sm rounded-4 p-4 mb-4">
+                <div class="row">
+                    <div class="col-md-6 mb-4">
+                        <h5 class="fw-bold mb-3" data-t="last_6_months">Last 6 Months Data</h5>
+                        <div class="table-responsive">
+                            <table class="table table-sm">
+                                <thead>
+                                    <tr>
+                                        <th data-t="month">Month</th>
+                                        <th data-t="date">Date</th>
+                                        <th data-t="rain_duration">Duration</th>
+                                        <th data-t="rainfall_mm">Rainfall (mm)</th>
+                                        <th data-t="frequency">Frequency</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="pastRainTable">
+                                    <!-- Data loaded via JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-4">
+                        <h5 class="fw-bold mb-3" data-t="next_7_days">Next 7 Days Prediction</h5>
+                        <div class="table-responsive">
+                            <table class="table table-sm">
+                                <thead>
+                                    <tr>
+                                        <th data-t="date">Date</th>
+                                        <th data-t="time">Time</th>
+                                        <th data-t="rain_probability_percent">Prob (%)</th>
+                                        <th data-t="wind_forecast">Wind</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="futureRainTable">
+                                    <!-- Data loaded via JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-12">
+                        <h5 class="fw-bold mb-3" data-t="weather_alerts">Weather Alerts</h5>
+                        <div id="weatherAlertsList">
+                            <!-- Alerts loaded via JS -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Farming Advisory & Crop Impact -->
+        <div class="row mb-4">
+            <div class="col-md-6 mb-4 mb-md-0">
+                <div class="card border-0 shadow-sm rounded-4 p-4 h-100">
+                    <h5 class="mb-4 fw-bold" data-t="farming_advisory">Farming Advisory</h5>
+                    <div id="farmingAdvisoryList">
+                        <!-- Suggestions loaded via JS -->
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card border-0 shadow-sm rounded-4 p-4 h-100">
+                    <h5 class="mb-4 fw-bold" data-t="crop_impact_warning">Crop Impact Warning</h5>
+                    <div id="cropImpactList">
+                        <!-- Warnings loaded via JS -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Temperature Trends -->
+        <div class="row mb-4">
+            <div class="col-md-6 mb-4 mb-md-0">
+                <div class="card border-0 shadow-sm rounded-4 p-4 h-100">
+                    <h5 class="mb-4 fw-bold" data-t="temp_trends">Temperature Trends</h5>
+                    <div class="chart-container">
+                        <canvas id="tempChart"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card border-0 shadow-sm rounded-4 p-4 h-100">
+                    <h5 class="mb-4 fw-bold" data-t="rainfall_data">Rainfall Data (Last 6 Months)</h5>
+                    <div class="chart-container">
+                        <canvas id="rainChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Seasonal Patterns & Prediction -->
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card border-0 shadow-sm rounded-4 p-4">
+                    <h5 class="mb-4 fw-bold" data-t="seasonal_patterns">Seasonal Patterns & Prediction</h5>
+                    <div class="row g-4" id="seasonalPatternsList">
+                        <!-- Detailed patterns loaded via JS -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="translations.js"></script>
+<script>
+    // Sidebar Toggle
+    const menuToggle = document.getElementById('menuToggle');
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('overlay');
+
+    menuToggle.addEventListener('click', () => {
+        sidebar.classList.add('active');
+        overlay.classList.add('active');
+    });
+
+    overlay.addEventListener('click', () => {
+        sidebar.classList.remove('active');
+        overlay.classList.remove('active');
+    });
+
+    const user = JSON.parse(localStorage.getItem('user'));
+    if (!user || user.role !== 'farmer') window.location.href = 'login.html';
+
+    // Initialize Admin-controlled Weather Data if not exists
+    
+    function initWeatherData() {
+        const lang = localStorage.getItem('krishi_mitra_lang') || 'en';
+        // Generate realistic 6 months past rain based on current date
+        const monthsStr = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        const pastRain = [];
+        let d = new Date();
+        for (let i = 1; i <= 6; i++) {
+            let mDate = new Date(d.getFullYear(), d.getMonth() - i, 15);
+            let mm = Math.floor(Math.random() * 50) + 10;
+            pastRain.push({
+                month: monthsStr[mDate.getMonth()],
+                date: mDate.getDate(),
+                duration: (Math.floor(Math.random() * 4) + 1) + 'h',
+                mm: mm,
+                frequency: mm > 30 ? 'High' : (mm > 15 ? 'Medium' : 'Low')
+            });
+        }
+        
+        // Generate 7 day forecast
+        const forecast = [];
+        for (let i = 1; i <= 7; i++) {
+            let fDate = new Date();
+            fDate.setDate(fDate.getDate() + i);
+            forecast.push({
+                date: fDate.toISOString().split('T')[0],
+                time: '12:00 PM',
+                temp: Math.floor(Math.random() * 10) + 25,
+                status: Math.random() > 0.5 ? 'Sunny' : 'Cloudy',
+                prob: Math.floor(Math.random() * 60) + 10,
+                wind: Math.floor(Math.random() * 20) + 5
+            });
+        }
+
+        
+        let updateStr = "";
+        if (weather.lastUpdated && weather.lastUpdated.includes('Updated on')) {
+            updateStr = weather.lastUpdated;
+        } else if (weather.lastUpdated) {
+            updateStr = "Updated on " + weather.lastUpdated + " by " + (weather.updatedBy || 'Admin');
+        }
+        const updateTemplate = updateStr ? `<div class="text-muted small mt-2 d-flex justify-content-end w-100"><i class="bi bi-clock-history me-1"></i> ${updateStr}</div>` : '';
+        const updateTemplateLeft = updateStr ? `<div class="text-muted small mt-2"><i class="bi bi-clock-history me-1"></i> ${updateStr}</div>` : '';
+        
+        // Add to main temp card
+        const tempContainer = document.getElementById('currentTemp').parentElement;
+        if(!tempContainer.querySelector('.update-tag')) {
+            tempContainer.insertAdjacentHTML('beforeend', '<div class="update-tag">' + updateTemplateLeft + '</div>');
+        } else {
+            tempContainer.querySelector('.update-tag').innerHTML = updateTemplateLeft;
+        }
+        
+        // Add to small cards
+        ['valHumidity', 'valWind', 'valRain', 'valPressure'].forEach(id => {
+            const el = document.getElementById(id);
+            if(el) {
+                const box = el.closest('.weather-value-box');
+                if(box) {
+                    if(!box.querySelector('.update-tag')) {
+                        box.insertAdjacentHTML('beforeend', '<div class="update-tag mt-1">' + updateTemplateLeft + '</div>');
+                    } else {
+                        box.querySelector('.update-tag').innerHTML = updateTemplateLeft;
+                    }
+                }
+            }
+        });
+
+const now = new Date();
+        const demoLastUpdated = "Updated on " + now.toLocaleDateString('en-GB') + " at " + now.toLocaleTimeString('en-US') + " by Admin";
+
+        const defaultData = {
+            current: {
+                temp: 32, humidity: 45, wind: 12, rain: 8, pressure: 1012, status: 'Sunny',
+                lastUpdated: demoLastUpdated,
+                updatedBy: 'Admin', source: 'IMD'
+            },
+            details: {
+                alert: 'Heavy rain expected in low-lying areas tomorrow night.',
+                advisory: 'Postpone pesticide spraying for next 2 days due to high wind expected.',
+                cropImpact: 'Excess moisture may cause root rot in early wheat.',
+                tempTrends: 'Temperature is expected to drop by 2-3°C next week.',
+                rainInfo: 'Accumulated rainfall is 15% above normal for this season.',
+                seasonalPatterns: 'Monsoon withdrawal is delayed, expect sporadic showers.'
+            },
+            pastRain: pastRain,
+            forecast: forecast,
+            graphData: { temp: [], rain: [] }
+        };
+
+        if (!localStorage.getItem('weatherData')) {
+            localStorage.setItem('weatherData', JSON.stringify(defaultData));
+        } else {
+            // Force demo data to ensure it is visible for testing
+            let wd = JSON.parse(localStorage.getItem('weatherData'));
+            if (!wd.pastRain || wd.pastRain.length < 2) {
+                wd.pastRain = pastRain;
+                wd.forecast = forecast;
+                wd.details = defaultData.details;
+                localStorage.setItem('weatherData', JSON.stringify(wd));
+            }
+        }
+    }
+
+    function getRangeStatus(val, range, t) {
+        if (val < range.min) return { text: t.low, class: 'range-low' };
+        if (val > range.max) return { text: t.high, class: 'range-high range-abnormal' };
+        return { text: t.normal, class: 'range-normal' };
+    }
+
+    function loadRainfallDetails() {
+        const lang = localStorage.getItem('krishi_mitra_lang') || 'en';
+        const t = translations[lang];
+        const data = JSON.parse(localStorage.getItem('weatherData')) || {
+            current: { temp: 32, humidity: 45, wind: 12, rain: 8, pressure: 1012, status: 'Sunny', lastUpdated: 'Just now', source: 'IMD' },
+            details: { alert: 'No alerts', advisory: 'Continue regular irrigation', cropImpact: 'None' },
+            pastRain: [],
+            forecast: [],
+            graphData: { temp: [], rain: [] }
+        };
+        const weather = data.current;
+        const details = data.details || {};
+
+                        
+        // Update Top Section
+        const now = new Date();
+        document.getElementById('currentDateDisplay').innerText = now.toLocaleDateString(lang === 'hi' ? 'hi-IN' : 'en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+        document.getElementById('currentTemp').innerText = `${weather.temp}°C`;
+        document.getElementById('weatherStatus').innerText = lang === 'hi' ? (weather.status === 'Sunny' ? 'धूप खिली है' : weather.status) : weather.status;
+        
+        document.getElementById('valHumidity').innerText = `${weather.humidity}%`;
+        document.getElementById('valWind').innerText = `${weather.wind} km/h`;
+        document.getElementById('valRain').innerText = `${weather.rain} mm`;
+        document.getElementById('valPressure').innerText = `${weather.pressure} hPa`;
+
+        // Range Indicators
+        const ranges = data.ranges || {
+            humidity: { min: 30, max: 60 },
+            wind: { min: 5, max: 20 },
+            rain: { min: 0, max: 10 },
+            pressure: { min: 1000, max: 1020 }
+        };
+
+        const hRange = getRangeStatus(weather.humidity, ranges.humidity, t);
+        const wRange = getRangeStatus(weather.wind, ranges.wind, t);
+        const rRange = getRangeStatus(weather.rain, ranges.rain, t);
+        const pRange = getRangeStatus(weather.pressure, ranges.pressure, t);
+
+        document.getElementById('rangeHumidity').innerText = hRange.text;
+        document.getElementById('rangeHumidity').className = `range-badge ${hRange.class}`;
+        document.getElementById('rangeWind').innerText = wRange.text;
+        document.getElementById('rangeWind').className = `range-badge ${wRange.class}`;
+        document.getElementById('rangeRain').innerText = rRange.text;
+        document.getElementById('rangeRain').className = `range-badge ${rRange.class}`;
+        document.getElementById('rangePressure').innerText = pRange.text;
+        document.getElementById('rangePressure').className = `range-badge ${pRange.class}`;
+
+        // Past Rain Advanced
+        const pastRainRaw = data.pastRain || [];
+        document.getElementById('pastRainTable').innerHTML = pastRainRaw.length ? pastRainRaw.map(r => `
+            <tr>
+                <td>${lang === 'hi' ? (r.month.includes('-') ? r.month : (translations.hi[r.month.toLowerCase()] || r.month)) : r.month} <br><small class="text-muted">${r.date || '--'}</small></td>
+                <td>${r.date || '--'}</td>
+                <td>${r.duration || '--'}</td>
+                <td>${r.mm} mm</td>
+                <td>${t['freq_'+ (r.frequency || 'medium').toLowerCase()] || r.frequency}</td>
+            </tr>
+        `).join('') : `<tr><td colspan="5" class="text-center py-2 text-muted" data-t="no_data_points">${t.no_data_points}</td></tr>`;
+
+        // Forecast Advanced
+        const forecastRaw = data.forecast || [];
+        document.getElementById('futureRainTable').innerHTML = forecastRaw.length ? forecastRaw.map((f, i) => {
+            const dateStr = f.date ? new Date(f.date).toLocaleDateString(lang === 'hi' ? 'hi-IN' : 'en-US', { day: 'numeric', month: 'short' }) : 'Next Day';
+            return `
+                <tr>
+                    <td>${dateStr} <br><small class="text-primary">${f.time || '--'}</small></td>
+                    <td>${f.time || '12:00 PM'}</td>
+                    <td>${f.prob}%</td>
+                    <td>${f.wind || '--'} km/h</td>
+                </tr>
+            `;
+        }).join('') : `<tr><td colspan="4" class="text-center py-2 text-muted" data-t="no_forecast_found">${t.no_forecast_found}</td></tr>`;
+
+        // Seasonal Patterns from Admin
+        if (details.seasonalPatterns) {
+            document.getElementById('seasonalPatternsList').innerHTML = `
+                <div class="col-12">
+                    <div class="p-4 bg-light rounded-4 border-start border-4 border-success shadow-sm">
+                        <h6 class="fw-bold text-success mb-3"><i class="bi bi-calendar-range me-2"></i>${t.seasonal_patterns_nav}</h6>
+                        <p class="mb-0">${details.seasonalPatterns}</p>${updateTemplate}
+                    </div>
+                </div>
+            `;
+        }
+
+        // Dynamic Logic for Alerts
+        let alertsHtml = `<div class="alert-box alert-info shadow-sm"><h6 class="fw-bold mb-1">${t.weather_alert}</h6><p class="mb-0 small">${details.alert || details.cropImpact || '-'}</p></div>`;
+        let advisoryHtml = `<div class="d-flex align-items-center mb-3 p-3 bg-light rounded-3 border-start border-4 border-primary shadow-sm"><i class="bi bi-info-circle fs-3 me-3 text-primary"></i><div><h6 class="fw-bold mb-1">${t.agri_advisory}</h6><p class="mb-0 small">${details.advisory || '-'}</p></div></div>`;
+        let impactHtml = `<div class="d-flex align-items-center mb-3 p-3 bg-light rounded-3 border-start border-4 border-danger shadow-sm"><i class="bi bi-exclamation-triangle fs-3 me-3 text-danger"></i><div><h6 class="fw-bold mb-1">${t.crop_alerts_nav}</h6><p class="mb-0 small">${details.cropImpact || details.alert || '-'}</p></div></div>`;
+
+        
+        
+
+        // Only append to sections if details have content
+        let alertsFinal = alertsHtml + (details.alert && details.alert !== 'No alerts' && details.alert !== '-' ? updateTemplate : '');
+        let advisoryFinal = advisoryHtml + (details.advisory && details.advisory !== 'Continue regular irrigation' && details.advisory !== '-' ? updateTemplate : '');
+        let impactFinal = impactHtml + (details.cropImpact && details.cropImpact !== 'None' && details.cropImpact !== '-' ? updateTemplate : '');
+
+        // And for tables/charts, maybe add at the end of their containers
+        
+        if (pastRainRaw.length > 0) {
+            let container = document.getElementById('pastRainTable').parentElement.parentElement;
+            if(!container.querySelector('.update-tag')) container.insertAdjacentHTML('beforeend', '<div class="update-tag">' + updateTemplate + '</div>');
+            else container.querySelector('.update-tag').innerHTML = updateTemplate;
+        }
+
+        
+        if (forecastRaw.length > 0) {
+            let container = document.getElementById('futureRainTable').parentElement.parentElement;
+            if(!container.querySelector('.update-tag')) container.insertAdjacentHTML('beforeend', '<div class="update-tag">' + updateTemplate + '</div>');
+            else container.querySelector('.update-tag').innerHTML = updateTemplate;
+        }
+
+
+        document.getElementById('weatherAlertsList').innerHTML = alertsFinal;
+        document.getElementById('farmingAdvisoryList').innerHTML = advisoryFinal;
+        document.getElementById('cropImpactList').innerHTML = impactFinal;
+
+
+        if (details.tempTrends) {
+             const trendBox = `<div class="alert-box alert-warning mt-3 border-start border-4 border-warning shadow-sm"><h6 class="fw-bold mb-1">${t.temp_trends_nav}</h6><p class="mb-0 small">${details.tempTrends}</p>${updateTemplate}</div>`;
+             document.getElementById('weatherAlertsList').innerHTML += trendBox;
+        }
+        if (details.rainInfo) {
+             const rainBox = `<div class="alert-box alert-info mt-3 border-start border-4 border-info shadow-sm"><h6 class="fw-bold mb-1">${t.rainfall_data_nav}</h6><p class="mb-0 small">${details.rainInfo}</p>${updateTemplate}</div>`;
+             document.getElementById('weatherAlertsList').innerHTML += rainBox;
+        }
+
+        syncChartsWithData(data);
+    }
+
+    function updateWeatherUI() {
+        const lang = localStorage.getItem('krishi_mitra_lang') || 'en';
+        const t = translations[lang];
+
+        const data = JSON.parse(localStorage.getItem('weatherData'));
+        if (data && data.current) {
+            document.getElementById('weatherStatus').innerText = data.current.status || (lang === 'hi' ? translations.hi.condition_sunny : 'Sunny');
+            // Additional fallback if specific data isn't handled correctly above
+        } else {
+            document.getElementById('weatherStatus').innerText = lang === 'hi' ? translations.hi.condition_sunny : 'Sunny';
+        }
+        
+        document.getElementById('weatherFullLoc').innerText = (user.village || (lang === 'hi' ? 'इंदौर' : 'Indore')) + (lang === 'hi' ? ', मध्य प्रदेश' : ', Madhya Pradesh');
+        
+        // Update chart labels if they exist
+        if (window.tempChartInstance) {
+            window.tempChartInstance.data.labels = lang === 'hi' ? ['सोम', 'मंगल', 'बुध', 'गुरु', 'शुक्र', 'शनि', 'रवि'] : ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+            window.tempChartInstance.data.datasets[0].label = t.temp_c;
+            window.tempChartInstance.update();
+        }
+        if (window.rainChartInstance) {
+            window.rainChartInstance.data.labels = lang === 'hi' ? ['नवंबर', 'दिसंबर', 'जनवरी', 'फरवरी', 'मार्च', 'अप्रैल'] : ['Nov', 'Dec', 'Jan', 'Feb', 'Mar', 'Apr'];
+            window.rainChartInstance.data.datasets[0].label = t.rain_mm;
+            window.rainChartInstance.update();
+        }
+    }
+
+    // Charts
+    function initCharts() {
+        const lang = localStorage.getItem('krishi_mitra_lang') || 'en';
+        
+        // Temperature Chart
+        const tempCtx = document.getElementById('tempChart').getContext('2d');
+        window.tempChartInstance = new Chart(tempCtx, {
+            type: 'line',
+            data: {
+                labels: lang === 'hi' ? ['सोम', 'मंगल', 'बुध', 'गुरु', 'शुक्र', 'शनि', 'रवि'] : ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                datasets: [{
+                    label: translations[lang].temp_c,
+                    data: [30, 32, 31, 34, 33, 35, 32],
+                    borderColor: '#ff9800',
+                    backgroundColor: 'rgba(255, 152, 0, 0.1)',
+                    fill: true,
+                    tension: 0.4
+                }]
+            },
+            options: { responsive: true, maintainAspectRatio: false }
+        });
+
+        // Rainfall Chart
+        const rainCtx = document.getElementById('rainChart').getContext('2d');
+        window.rainChartInstance = new Chart(rainCtx, {
+            type: 'bar',
+            data: {
+                labels: lang === 'hi' ? ['नवंबर', 'दिसंबर', 'जनवरी', 'फरवरी', 'मार्च', 'अप्रैल'] : ['Nov', 'Dec', 'Jan', 'Feb', 'Mar', 'Apr'],
+                datasets: [{
+                    label: translations[lang].rain_mm,
+                    data: [10, 5, 2, 0, 15, 8],
+                    backgroundColor: '#2196f3',
+                    borderRadius: 5
+                }]
+            },
+            options: { responsive: true, maintainAspectRatio: false }
+        });
+    }
+
+    // Logout with Confirmation
+    document.getElementById('logoutBtn').addEventListener('click', () => {
+        const lang = localStorage.getItem('krishi_mitra_lang') || 'en';
+        const t = translations[lang];
+        Swal.fire({
+            title: t.logout_confirm_title,
+            text: t.logout_confirm,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#28a745',
+            cancelButtonColor: '#d33',
+            confirmButtonText: t.logout
+        }).then((result) => {
+            if (result.isConfirmed) {
+                localStorage.removeItem('user');
+                window.location.href = 'index.html#top';
+            }
+        });
+    });
+
+    function syncChartsWithData(data) {
+        if (!window.tempChartInstance || !window.rainChartInstance) return;
+        
+        const gd = data.graphData || { temp: [], rain: [] };
+        const pastRain = data.pastRain || [];
+        const lang = localStorage.getItem('krishi_mitra_lang') || 'en';
+
+        if (gd.temp && gd.temp.length > 0) {
+            window.tempChartInstance.data.labels = gd.temp.map(p => p.date);
+            window.tempChartInstance.data.datasets[0].data = gd.temp.map(p => p.value);
+            window.tempChartInstance.update();
+        }
+
+        if (gd.rain && gd.rain.length > 0) {
+            window.rainChartInstance.data.labels = gd.rain.map(p => p.date);
+            window.rainChartInstance.data.datasets[0].data = gd.rain.map(p => p.value);
+            window.rainChartInstance.update();
+        } else if (pastRain.length > 0) {
+            window.rainChartInstance.data.labels = pastRain.map(p => p.month);
+            window.rainChartInstance.data.datasets[0].data = pastRain.map(p => p.mm);
+            window.rainChartInstance.update();
+        }
+    }
+
+    const fetchAndUpdateData = () => {
+        loadRainfallDetails();
+    };
+
+    // Auto-refresh logic
+    setInterval(fetchAndUpdateData, 5000);
+    window.addEventListener('storage', (e) => {
+        if (e.key === 'weatherData' || e.key === 'weather_update_signal' || e.key === 'krishi_mitra_lang') {
+            loadRainfallDetails();
+            updateWeatherUI();
+        }
+    });
+
+    // Initial Load
+    initCharts();
+    initWeatherData();
+    loadRainfallDetails();
+    updateWeatherUI();
+</script>
+</body>
+</html>

@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title data-t="schemes_title">Krishi Mitra - Agricultural Schemes</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        :root { --primary-green: #1a531b; --secondary-green: #2e7d32; }
+        body { background-color: #f0f2f5; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        .sidebar { height: 100vh; background: var(--primary-green); color: white; position: fixed; width: 250px; transition: all 0.3s; z-index: 1000; }
+        .sidebar a { color: #cfdfcf; text-decoration: none; padding: 12px 20px; display: block; transition: 0.2s; border-radius: 8px; margin: 4px 10px; }
+        .sidebar a:hover, .sidebar a.active { background: var(--secondary-green); color: white; }
+        .sidebar .bottom-links { position: absolute; bottom: 20px; width: 100%; }
+        .main-content { margin-left: 250px; padding: 20px; transition: all 0.3s; }
+        .mobile-nav { display: none; background: var(--primary-green); color: white; padding: 10px 20px; position: sticky; top: 0; z-index: 1001; }
+        .scheme-card { border: none; border-radius: 15px; transition: transform 0.2s; cursor: pointer; }
+        .scheme-card:hover { transform: translateY(-5px); box-shadow: 0 10px 20px rgba(0,0,0,0.1) !important; }
+        @media (max-width: 768px) {
+            .sidebar { transform: translateX(-100%); width: 250px; }
+            .sidebar.active { transform: translateX(0); }
+            .main-content { margin-left: 0; }
+            .mobile-nav { display: flex; justify-content: space-between; align-items: center; }
+            .overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 999; }
+            .overlay.active { display: block; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="overlay" id="overlay"></div>
+
+<div class="mobile-nav">
+    <h4 class="mb-0"><i class="bi bi-leaf"></i> Krishi Mitra</h4>
+    <button class="btn text-white fs-3 p-0" id="menuToggle"><i class="bi bi-list"></i></button>
+</div>
+
+<div class="sidebar" id="sidebar">
+    <div class="p-4 text-center">
+        <h3 class="fw-bold"><i class="bi bi-leaf"></i> <span data-t="brand">Krishi Mitra</span></h3>
+    </div>
+    <nav>
+        <a href="farmer_dashboard.html"><i class="bi bi-speedometer2 me-2"></i> <span data-t="dashboard">Dashboard</span></a>
+        <a href="weather.html"><i class="bi bi-cloud-sun me-2"></i> <span data-t="weather_nav">Weather</span></a>
+        <a href="my_crops.html"><i class="bi bi-tree me-2"></i> <span data-t="my_crops_nav">My Crops</span></a>
+        <a href="all_crops_info.html"><i class="bi bi-journal-text me-2"></i> <span data-t="all_crops_info_nav">Smart Crop Information</span></a>
+        <a href="schemes.html" class="active"><i class="bi bi-award me-2"></i> <span data-t="schemes_nav">Schemes</span></a>
+        <a href="market_prices.html"><i class="bi bi-graph-up-arrow me-2"></i> <span data-t="market_prices_nav">Market Price</span></a>
+        <a href="notifications.html"><i class="bi bi-bell me-2"></i> <span data-t="notifications_nav">Notifications</span></a>
+        <a href="queries.html"><i class="bi bi-question-circle me-2"></i> <span data-t="my_queries">My Questions</span></a>
+        
+        <div class="bottom-links">
+            <a href="profile.html"><i class="bi bi-person-circle me-2"></i> <span data-t="profile_nav">Profile</span></a>
+            <a href="#" id="logoutBtn" class="text-danger"><i class="bi bi-box-arrow-right me-2"></i> <span data-t="logout">Logout</span></a>
+        </div>
+    </nav>
+</div>
+
+<div class="main-content">
+    <div class="container">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="fw-bold mb-0" data-t="schemes_title">Agricultural Schemes</h2>
+            <button class="btn btn-outline-success" id="langToggle">
+                <i class="bi bi-translate me-1"></i> <span id="langToggleText">हिंदी</span>
+            </button>
+        </div>
+
+        <!-- Search and Filter -->
+        <div class="card border-0 shadow-sm p-4 mb-4 rounded-4 bg-white">
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <div class="input-group">
+                        <span class="input-group-text bg-white border-end-0"><i class="bi bi-search"></i></span>
+                        <input type="text" class="form-control border-start-0" id="searchInput" placeholder="Search schemes..." data-t="search_schemes_ph">
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <select class="form-select" id="stateFilter">
+                        <option value="" data-t="all_states">All States</option>
+                        <option value="Central">Central Govt</option>
+                        <option value="Andhra Pradesh">Andhra Pradesh</option>
+                        <option value="Bihar">Bihar</option>
+                        <option value="Gujarat">Gujarat</option>
+                        <option value="Haryana">Haryana</option>
+                        <option value="Karnataka">Karnataka</option>
+                        <option value="Madhya Pradesh">Madhya Pradesh</option>
+                        <option value="Maharashtra">Maharashtra</option>
+                        <option value="Punjab">Punjab</option>
+                        <option value="Rajasthan">Rajasthan</option>
+                        <option value="Uttar Pradesh">Uttar Pradesh</option>
+                        <option value="West Bengal">West Bengal</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <select class="form-select" id="typeFilter">
+                        <option value="" data-t="all_types">All Types</option>
+                        <option value="Govt">Govt</option>
+                        <option value="Semi Govt">Semi Govt</option>
+                        <option value="Private">Private</option>
+                        <option value="NGO">NGO</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <select class="form-select" id="cropFilter">
+                        <option value="" data-t="all_crops">All Crops</option>
+                        <!-- Populated dynamically based on schemes -->
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Schemes Grid -->
+        <div class="row g-4" id="schemesGrid">
+            <!-- Schemes will be loaded here -->
+        </div>
+    </div>
+</div>
+
+<script src="translations.js"></script>
+<script>
+    // Add sample yojana if missing
+    let yojanaData = JSON.parse(localStorage.getItem('yojana_data')) || [];
+    const newSchemes = [
+        {
+            id: 101,
+            name_hi: "प्रधानमंत्री फसल बीमा योजना",
+            name_en: "Pradhan Mantri Fasal Bima Yojana",
+            cropName_hi: "गेहूं",
+            cropName_en: "Wheat",
+            state: "Central", type: "Govt",
+            shortDesc_hi: "यह योजना किसानों को प्राकृतिक आपदाओं से होने वाले फसल नुकसान पर बीमा सुरक्षा प्रदान करती है।",
+            shortDesc_en: "Provides insurance coverage against crop loss.",
+            eligibility_hi: "सभी किसान जो अधिसूचित क्षेत्र में खेती करते हैं।",
+            eligibility_en: "All farmers in notified areas.",
+            benefits_hi: "फसल नुकसान पर आर्थिक सहायता।",
+            benefits_en: "Financial protection for crop damage.",
+            subsidyPercent: "2%", areaLimit: "N/A", farmerCont: "1.5% to 5%", govtCont: "Balance premium shared by Central & State Govt", maxUsage: "Once per season", process_hi: "पोर्टल पर आवेदन करें", process_en: "Apply via portal", docs_hi: "आधार, भूमि रिकॉर्ड", docs_en: "Aadhar, Land records", terms_hi: "नियम लागू", terms_en: "Terms apply",
+            status: "Active"
+        },
+        {
+            id: 102,
+            name_hi: "प्रधानमंत्री कृषि सिंचाई योजना",
+            name_en: "PM Krishi Sinchai Yojana",
+            cropName_hi: "धान",
+            cropName_en: "Rice",
+            state: "Central", type: "Govt",
+            shortDesc_hi: "सिंचाई सुविधा बढ़ाने के लिए योजना।",
+            shortDesc_en: "Improves irrigation facilities.",
+            eligibility_hi: "छोटे और सीमांत किसान।",
+            eligibility_en: "Small and marginal farmers.",
+            benefits_hi: "पानी की उपलब्धता बढ़ाना।",
+            benefits_en: "Increases water availability.",
+            subsidyPercent: "varies", areaLimit: "N/A", farmerCont: "varies", govtCont: "varies", maxUsage: "Once", process_hi: "कृषि विभाग", process_en: "Agriculture Dept", docs_hi: "आधार", docs_en: "Aadhar", terms_hi: "नियम लागू", terms_en: "Terms apply",
+            status: "Active"
+        },
+        {
+            id: 103,
+            name_hi: "राष्ट्रीय खाद्य सुरक्षा मिशन",
+            name_en: "National Food Security Mission",
+            cropName_hi: "सोयाबीन",
+            cropName_en: "Soybean",
+            state: "Central", type: "Govt",
+            shortDesc_hi: "उत्पादन बढ़ाने हेतु सहायता।",
+            shortDesc_en: "Supports crop productivity.",
+            eligibility_hi: "सभी किसान।",
+            eligibility_en: "All farmers.",
+            benefits_hi: "बीज और उर्वरक सहायता।",
+            benefits_en: "Assistance for seeds and fertilizers.",
+            subsidyPercent: "varies", areaLimit: "N/A", farmerCont: "varies", govtCont: "varies", maxUsage: "Once", process_hi: "कृषि विभाग", process_en: "Agriculture Dept", docs_hi: "आधार", docs_en: "Aadhar", terms_hi: "नियम लागू", terms_en: "Terms apply",
+            status: "Active"
+        },
+        {
+            id: 104,
+            name_hi: "कपास विकास योजना",
+            name_en: "Cotton Development Scheme",
+            cropName_hi: "कपास",
+            cropName_en: "Cotton",
+            state: "Central", type: "Govt",
+            shortDesc_hi: "कपास उत्पादन सुधार हेतु।",
+            shortDesc_en: "Improves cotton yield.",
+            eligibility_hi: "कपास किसान।",
+            eligibility_en: "Cotton farmers.",
+            benefits_hi: "उन्नत बीज और तकनीक।",
+            benefits_en: "Advanced seeds and technology.",
+            subsidyPercent: "varies", areaLimit: "N/A", farmerCont: "varies", govtCont: "varies", maxUsage: "Once", process_hi: "कृषि विभाग", process_en: "Agriculture Dept", docs_hi: "आधार", docs_en: "Aadhar", terms_hi: "नियम लागू", terms_en: "Terms apply",
+            status: "Active"
+        },
+        {
+            id: 105,
+            name_hi: "मक्का प्रोत्साहन योजना",
+            name_en: "Maize Promotion Scheme",
+            cropName_hi: "मक्का",
+            cropName_en: "Maize",
+            state: "Central", type: "Govt",
+            shortDesc_hi: "मक्का उत्पादन बढ़ाने हेतु।",
+            shortDesc_en: "Promotes maize cultivation.",
+            eligibility_hi: "मक्का किसान।",
+            eligibility_en: "Maize farmers.",
+            benefits_hi: "अनुदान और तकनीकी सहायता।",
+            benefits_en: "Subsidies and technical support.",
+            subsidyPercent: "varies", areaLimit: "N/A", farmerCont: "varies", govtCont: "varies", maxUsage: "Once", process_hi: "कृषि विभाग", process_en: "Agriculture Dept", docs_hi: "आधार", docs_en: "Aadhar", terms_hi: "नियम लागू", terms_en: "Terms apply",
+            status: "Active"
+        }
+    ];
+
+    newSchemes.forEach(ns => {
+        if (!yojanaData.some(y => y.name_en === ns.name_en)) {
+            yojanaData.push(ns);
+        }
+    });
+
+    localStorage.setItem('yojana_data', JSON.stringify(yojanaData));
+    localStorage.setItem('schemes_data', JSON.stringify(yojanaData));
+
+    const user = JSON.parse(localStorage.getItem('user'));
+    if (!user || user.role !== 'farmer') window.location.href = 'login.html';
+
+    const defaultSchemes = [
+        {
+            id: 1,
+            name: "Pradhan Mantri Fasal Bima Yojana (PMFBY)",
+            cropName: "All Major Crops",
+            state: "Central",
+            type: "Govt",
+            shortDesc: "Comprehensive crop insurance scheme protecting farmers from non-preventable natural risks from pre-sowing to post-harvest.",
+            eligibility: "All farmers including sharecroppers and tenant farmers growing notified crops in notified areas.",
+            benefits: "Financial support to farmers suffering crop loss/damage arising out of unforeseen events.",
+            subsidyPercent: "varies (Farmer premium: 2% for Kharif, 1.5% for Rabi, 5% for commercial/horticultural)",
+            areaLimit: "No limit",
+            process: "Apply via PMFBY portal, CSCs, banks, or agriculture department office before the cutoff date.",
+            docs: "Aadhar card, Bank passbook, Land records (Khasra/Khatauni), Sowing certificate.",
+            maxUsage: "Once per season",
+            farmerCont: "1.5% to 5% of sum insured",
+            govtCont: "Balance premium shared by Central & State Govt",
+            terms: "Must apply within cutoff date. Losses due to war, nuclear risks, malicious damage not covered."
+        },
+        {
+            id: 2,
+            name: "Paramparagat Krishi Vikas Yojana (PKVY)",
+            cropName: "Organic Farming",
+            state: "Central",
+            type: "Govt",
+            shortDesc: "Promotion of commercial organic production through certified organic farming.",
+            eligibility: "Groups of farmers who want to do organic farming. Cluster of 20 hectares.",
+            benefits: "Financial assistance for organic farming certification and inputs.",
+            subsidyPercent: "100% of the scheme provisions (₹50,000 per hectare for 3 years)",
+            areaLimit: "50 Acres per cluster",
+            process: "Form a cluster and apply through state agriculture department.",
+            docs: "Aadhar, Land records, Group resolution.",
+            maxUsage: "Once per 3-year term",
+            farmerCont: "Labor and commitment to organic practices",
+            govtCont: "₹50,000 per hectare over 3 years",
+            terms: "Must avoid chemical fertilizers and pesticides. Must follow certification protocols."
+        }
+    ];
+
+    if (!localStorage.getItem('schemes_data')) {
+        localStorage.setItem('schemes_data', JSON.stringify(defaultSchemes));
+    }
+    if (!localStorage.getItem('yojana_data')) {
+        localStorage.setItem('yojana_data', JSON.stringify(defaultSchemes));
+    }
+
+    const schemesGrid = document.getElementById('schemesGrid');
+    const searchInput = document.getElementById('searchInput');
+    const stateFilter = document.getElementById('stateFilter');
+    const typeFilter = document.getElementById('typeFilter');
+    const cropFilter = document.getElementById('cropFilter');
+
+    function populateCropFilter(schemes) {
+        const lang = localStorage.getItem('krishi_mitra_lang') || 'en';
+        const t = translations[lang] || translations['en'];
+        const crops = new Set(schemes.map(s => s.cropName).filter(Boolean));
+        const curr = cropFilter.value;
+        cropFilter.innerHTML = `<option value="" data-t="all_crops">${t.all_crops || 'All Crops'}</option>` + Array.from(crops).map(c => `<option value="${c}">${c}</option>`).join('');
+        if (Array.from(crops).includes(curr)) cropFilter.value = curr;
+    }
+
+    function renderSchemes(filtered) {
+        const lang = localStorage.getItem('krishi_mitra_lang') || 'en';
+        const t = translations[lang] || translations['en'];
+        
+        if (filtered.length === 0) {
+            schemesGrid.innerHTML = `
+                <div class="col-12 text-center py-5">
+                    <i class="bi bi-award text-muted fs-1 mb-3 d-block opacity-50"></i>
+                    <h5 class="text-muted" data-t="no_schemes_found">${t.no_schemes_found || 'No schemes found matching your criteria.'}</h5>
+                </div>
+            `;
+            return;
+        }
+
+        schemesGrid.innerHTML = filtered.map(s => {
+            const lang = localStorage.getItem('krishi_mitra_lang') || 'en';
+            const name = lang === 'hi' ? (s.name_hi || s.name_en || s.name || '') : (s.name_en || s.name_hi || s.name || '');
+            const cropName = lang === 'hi' ? (s.cropName_hi || s.cropName_en || s.cropName || '') : (s.cropName_en || s.cropName_hi || s.cropName || '');
+            const shortDesc = lang === 'hi' ? (s.shortDesc_hi || s.shortDesc_en || s.shortDesc || '') : (s.shortDesc_en || s.shortDesc_hi || s.shortDesc || '');
+
+            return `
+            <div class="col-md-6 col-lg-4">
+                <div class="card scheme-card shadow-sm h-100 p-4" onclick="window.location.href='scheme_details.html?id=${s.id}'">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div class="bg-primary bg-opacity-10 p-3 rounded-4">
+                            <i class="bi bi-file-earmark-check text-primary fs-3"></i>
+                        </div>
+                        <div class="text-end">
+                            <span class="badge ${s.type === 'Govt' || s.type === 'Central' ? 'bg-success' : 'bg-info'} mb-1">${s.type === 'Govt' ? (lang === 'hi'?'सरकारी':'Govt') : s.type}</span><br>
+                            <span class="badge bg-secondary bg-opacity-10 text-secondary border">${s.state === 'Central' ? (lang === 'hi'?'केंद्र':'Central') : (s.state === 'State' ? (lang === 'hi'?'राज्य':'State') : s.state)}</span>
+                        </div>
+                    </div>
+                    <h5 class="fw-bold mb-2 text-dark">${name}</h5>
+                    <div class="text-success small fw-bold mb-2"><i class="bi bi-tree me-1"></i> ${cropName}</div>
+                    <p class="text-muted small mb-0 flex-grow-1" style="display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; text-overflow: ellipsis;">
+                        ${shortDesc}
+                    </p>
+                    <div class="mt-4 text-primary small fw-bold">
+                        <span data-t="read_more">${t.read_more || 'Read more'}</span> <i class="bi bi-arrow-right"></i>
+                    </div>
+                </div>
+            </div>
+        `; }).join('');
+    }
+
+    function filterSchemes() {
+        let schemes = JSON.parse(localStorage.getItem('yojana_data')) || JSON.parse(localStorage.getItem('schemes_data')) || [];
+        
+        // Filter ONLY Active status schemes
+        schemes = schemes.filter(s => {
+            const status = (s.status || 'Active').toLowerCase();
+            return status === 'active';
+        });
+
+        // Ensure no duplicate entries
+        const unique = [];
+        const seen = new Set();
+        schemes.forEach(s => {
+            if (s.id && !seen.has(s.id)) {
+                seen.add(s.id);
+                unique.push(s);
+            }
+        });
+        schemes = unique;
+
+        const term = searchInput.value.toLowerCase().trim();
+        const state = stateFilter.value;
+        const type = typeFilter.value;
+        const crop = cropFilter.value;
+
+        const filtered = schemes.filter(s => {
+            const matchesSearch = !term || s.name.toLowerCase().includes(term) || (s.shortDesc && s.shortDesc.toLowerCase().includes(term));
+            const matchesState = !state || s.state === state;
+            const matchesType = !type || s.type === type;
+            const matchesCrop = !crop || s.cropName === crop;
+            return matchesSearch && matchesState && matchesType && matchesCrop;
+        });
+
+        renderSchemes(filtered);
+    }
+
+    function init() {
+        let schemes = JSON.parse(localStorage.getItem('yojana_data')) || JSON.parse(localStorage.getItem('schemes_data')) || [];
+        
+        // Filter ONLY Active status schemes
+        schemes = schemes.filter(s => {
+            const status = (s.status || 'Active').toLowerCase();
+            return status === 'active';
+        });
+
+        // Ensure no duplicate entries
+        const unique = [];
+        const seen = new Set();
+        schemes.forEach(s => {
+            if (s.id && !seen.has(s.id)) {
+                seen.add(s.id);
+                unique.push(s);
+            }
+        });
+        schemes = unique;
+
+        populateCropFilter(schemes);
+        renderSchemes(schemes);
+    }
+
+    searchInput.addEventListener('input', filterSchemes);
+    stateFilter.addEventListener('change', filterSchemes);
+    typeFilter.addEventListener('change', filterSchemes);
+    cropFilter.addEventListener('change', filterSchemes);
+
+    // Sidebar Toggle
+    const menuToggle = document.getElementById('menuToggle');
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('overlay');
+
+    menuToggle.addEventListener('click', () => {
+        sidebar.classList.add('active');
+        overlay.classList.add('active');
+    });
+
+    overlay.addEventListener('click', () => {
+        sidebar.classList.remove('active');
+        overlay.classList.remove('active');
+    });
+
+    // Translation setup
+    const langToggle = document.getElementById('langToggle');
+    if (langToggle) {
+        langToggle.addEventListener('click', () => {
+            if (window.toggleLang) window.toggleLang();
+        });
+    }
+
+    // Bind to language changing
+    window.addEventListener('languageChanged', filterSchemes);
+
+    document.getElementById('logoutBtn').addEventListener('click', (e) => {
+        e.preventDefault();
+        const lang = localStorage.getItem('krishi_mitra_lang') || 'en';
+        Swal.fire({
+            title: translations[lang].logout_confirm_title || "Are you sure?",
+            text: translations[lang].logout_confirm || "Do you really want to logout?",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#1a531b',
+            cancelButtonColor: '#d33',
+            confirmButtonText: lang === 'hi' ? 'हाँ, लॉगआउट करें' : 'Yes, logout'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                localStorage.removeItem('user');
+                window.location.href = 'index.html#top';
+            }
+        });
+    });
+
+    // using window global applyTranslations
+
+    // Initial setup
+    applyTranslations();
+    
+    // Real-time sync listener
+    window.addEventListener('storage', (event) => {
+        if (event.key === 'yojana_data') {
+            filterSchemes();
+        }
+    });
+
+    init();
+
+</script>
+</body>
+</html>

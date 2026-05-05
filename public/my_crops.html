@@ -1,0 +1,1269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title data-t="my_crops_nav">Krishi Mitra - My Crops</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        :root { --primary-green: #1a531b; --secondary-green: #2e7d32; }
+        body { background-color: #f0f2f5; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        .sidebar { height: 100vh; background: var(--primary-green); color: white; position: fixed; width: 250px; transition: all 0.3s; z-index: 1000; }
+        .sidebar a { color: #cfdfcf; text-decoration: none; padding: 12px 20px; display: block; transition: 0.2s; border-radius: 8px; margin: 4px 10px; }
+        .sidebar a:hover, .sidebar a.active { background: var(--secondary-green); color: white; }
+        .sidebar .bottom-links { position: absolute; bottom: 20px; width: 100%; }
+        .main-content { margin-left: 250px; padding: 20px; transition: all 0.3s; }
+        .mobile-nav { display: none; background: var(--primary-green); color: white; padding: 10px 20px; position: sticky; top: 0; z-index: 1001; }
+        .crop-card { border: none; border-radius: 15px; transition: transform 0.2s; }
+        .crop-card:hover { transform: translateY(-5px); }
+        .badge-status { position: absolute; top: 15px; right: 15px; }
+        
+        /* Enhanced Reminder Styles */
+        .reminder-card {
+            border: 1px solid #e0e0e0;
+            border-radius: 16px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            background: white;
+            overflow: hidden;
+        }
+        .reminder-card:hover {
+            box-shadow: 0 10px 20px rgba(0,0,0,0.05);
+            border-color: var(--secondary-green);
+        }
+        .reminder-card.completed {
+            background: #f8f9fa;
+            border-color: #dee2e6;
+            opacity: 0.8;
+        }
+        .reminder-type-icon {
+            width: 48px;
+            height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 12px;
+            font-size: 1.25rem;
+        }
+        .reminder-time {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+            letter-spacing: -0.02em;
+        }
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 6px;
+        }
+        @media (max-width: 768px) {
+            .sidebar { transform: translateX(-100%); width: 250px; }
+            .sidebar.active { transform: translateX(0); }
+            .main-content { margin-left: 0; }
+            .mobile-nav { display: flex; justify-content: space-between; align-items: center; }
+            .overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 999; }
+            .overlay.active { display: block; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="overlay" id="overlay"></div>
+
+<div class="mobile-nav">
+    <h4 class="mb-0"><i class="bi bi-leaf"></i> Krishi Mitra</h4>
+    <button class="btn text-white fs-3 p-0" id="menuToggle"><i class="bi bi-list"></i></button>
+</div>
+
+<div class="sidebar" id="sidebar">
+    <div class="p-4 text-center">
+        <h3 class="fw-bold"><i class="bi bi-leaf"></i> <span data-t="brand">Krishi Mitra</span></h3>
+    </div>
+    <nav>
+        <a href="farmer_dashboard.html"><i class="bi bi-speedometer2 me-2"></i> <span data-t="dashboard">Dashboard</span></a>
+        <a href="weather.html"><i class="bi bi-cloud-sun me-2"></i> <span data-t="weather_nav">Weather</span></a>
+        <a href="my_crops.html" class="active"><i class="bi bi-tree me-2"></i> <span data-t="my_crops_nav">My Crops</span></a>
+        <a href="all_crops_info.html"><i class="bi bi-journal-text me-2"></i> <span data-t="all_crops_info_nav">Smart Crop Information</span></a>
+        <a href="schemes.html"><i class="bi bi-award me-2"></i> <span data-t="schemes_nav">Schemes</span></a>
+        <a href="market_prices.html"><i class="bi bi-graph-up-arrow me-2"></i> <span data-t="market_prices_nav">Market Price</span></a>
+        <a href="notifications.html"><i class="bi bi-bell me-2"></i> <span data-t="notifications_nav">Notifications</span></a>
+        <a href="queries.html"><i class="bi bi-question-circle me-2"></i> <span data-t="my_queries">My Questions</span></a>
+        
+        <div class="bottom-links">
+            <a href="profile.html"><i class="bi bi-person-circle me-2"></i> <span data-t="profile_nav">Profile</span></a>
+            <a href="#" id="logoutBtn" class="text-danger"><i class="bi bi-box-arrow-right me-2"></i> <span data-t="logout">Logout</span></a>
+        </div>
+    </nav>
+</div>
+
+<div class="main-content">
+    <div class="container">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="fw-bold mb-0" data-t="my_crops_nav">My Crops</h2>
+            <button class="btn btn-success rounded-pill px-4" data-bs-toggle="modal" data-bs-target="#addCropModal">
+                <i class="bi bi-plus-lg me-2"></i> <span data-t="add_crop">Add Crop</span>
+            </button>
+        </div>
+
+        <!-- Current Crop Section -->
+        <div id="currentCropSection" class="mb-5">
+            <h4 class="mb-3 fw-bold text-success" data-t="current_crop">Current Crop</h4>
+            <div class="row g-4" id="currentCropsList">
+                <!-- Current crops will be loaded here -->
+            </div>
+        </div>
+
+        <!-- Past Crops Section -->
+        <div id="pastCropsSection" class="mb-5">
+            <h4 class="mb-3 fw-bold text-muted" data-t="past_crops">Past Crops</h4>
+            <div class="row g-4" id="pastCropsList">
+                <!-- Past crops will be loaded here -->
+            </div>
+        </div>
+
+        <!-- Profit Trends Chart -->
+        <div class="card border-0 shadow-sm rounded-4 p-4 mb-5">
+            <h5 class="mb-4 fw-bold" data-t="cost_vs_profit">Cost vs Profit Analysis</h5>
+            <div style="height: 300px;">
+                <canvas id="profitChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Reminders Section -->
+        <div class="mb-5">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h4 class="fw-bold mb-0" data-t="reminders">Reminders</h4>
+                <button class="btn btn-success rounded-pill px-4" data-bs-toggle="modal" data-bs-target="#reminderModal">
+                    <i class="bi bi-plus-lg me-2"></i> <span data-t="add_reminder">Add Reminder</span>
+                </button>
+            </div>
+            <div class="row g-3" id="reminderList">
+                <!-- Reminders will be loaded here -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Crop Modal -->
+<div class="modal fade" id="addCropModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content border-0 rounded-4 shadow">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title fw-bold" data-t="add_crop">Add Crop</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <form id="addCropForm">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold" data-t="my_crops">Crop Name</label>
+                            <select class="form-select" id="cropNameSelect" required>
+                                <!-- Options loaded from admin data -->
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold" data-t="seed_type">Seed Type</label>
+                            <select class="form-select" id="seedTypeSelect" required>
+                                <!-- Options loaded from admin data -->
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold" data-t="fertilizers">Fertilizer</label>
+                            <select class="form-select" id="fertilizerSelect" required>
+                                <!-- Options loaded from admin data -->
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold" data-t="pesticides">Pesticide</label>
+                            <select class="form-select" id="pesticideSelect" required>
+                                <!-- Options loaded from admin data -->
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold" data-t="sowing_date">Sowing Date</label>
+                            <input type="date" class="form-control" id="sowingDateInput" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold" data-t="crop_duration">Crop Duration (Days)</label>
+                            <input type="number" class="form-control" id="cropDurationInput" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold" data-t="expected_harvest_date">Expected Harvest Date</label>
+                            <input type="date" class="form-control" id="harvestDateInput" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold" data-t="estimated_cost">Estimated Cost (₹)</label>
+                            <input type="number" class="form-control" id="estCostInput" min="0" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold" data-t="estimated_production">Estimated Production (Quintal)</label>
+                            <input type="number" class="form-control" id="estProductionInput" min="0" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold" data-t="land_area">Total Land Area (Acres)</label>
+                            <input type="number" class="form-control" id="landAreaInput" min="0" required>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-success w-100 py-2 rounded-3 mt-4" data-t="submit">Submit</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Duration Modal -->
+<div class="modal fade" id="editDurationModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 rounded-4 shadow">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title fw-bold" data-t="edit_duration">Edit Duration</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <form id="editDurationForm">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold" data-t="crop_duration">Crop Duration (Days)</label>
+                        <input type="number" class="form-control" id="editDurationInput" required>
+                    </div>
+                    <button type="submit" class="btn btn-success w-100 py-2 rounded-3 mt-3" data-t="submit">Submit</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Complete Crop Modal -->
+<div class="modal fade" id="completeCropModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 rounded-4 shadow">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title fw-bold" data-t="mark_completed">Mark as Completed</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <form id="completeCropForm">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold" data-t="total_cost">Total Cost (₹)</label>
+                            <input type="number" class="form-control" id="totalCostInput" min="0" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold" data-t="total_production_label">Total Production (Quintal)</label>
+                            <input type="number" class="form-control" id="totalProductionInput" min="0" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold" data-t="selling_price">Selling Price (₹/Quintal) (Optional)</label>
+                            <input type="number" class="form-control" id="sellingPriceInput" min="0">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold" data-t="expected_profit">Expected Profit (₹) (Optional)</label>
+                            <input type="number" class="form-control" id="totalProfitInput" min="0">
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold" data-t="soil_type_label">Soil Type (Optional)</label>
+                            <select class="form-select" id="soilTypeSelect">
+                                <option value="" data-t="select_soil">Select Soil Type</option>
+                                <option value="Loamy" data-t="loamy">Loamy</option>
+                                <option value="Clayey" data-t="clayey">Clayey</option>
+                                <option value="Sandy" data-t="sandy">Sandy</option>
+                                <option value="Black" data-t="black">Black</option>
+                                <option value="Red" data-t="red">Red</option>
+                                <option value="Alluvial" data-t="alluvial">Alluvial</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold" data-t="spray_count">Spray Count</label>
+                            <input type="number" class="form-control" id="sprayCountInput" min="0" value="0">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold" data-t="fertilizer_quantity">Fertilizer Quantity (Quintal)</label>
+                            <input type="number" class="form-control" id="fertQuantityInput" min="0" step="0.1" value="0">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold" data-t="fertilizer_name">Fertilizer Name (Optional)</label>
+                            <input type="text" class="form-control" id="fertNameInput">
+                        </div>
+
+                        <div class="col-12"><h6 class="fw-bold mt-2" data-t="cost_breakdown">Cost Breakdown</h6></div>
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold" data-t="seed_cost">Seed Cost</label>
+                            <input type="number" class="form-control form-control-sm breakdown-input" id="costSeed" value="0">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold" data-t="fertilizer_cost">Fertilizer Cost</label>
+                            <input type="number" class="form-control form-control-sm breakdown-input" id="costFert" value="0">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold" data-t="pesticide_cost">Pesticide Cost</label>
+                            <input type="number" class="form-control form-control-sm breakdown-input" id="costPest" value="0">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold" data-t="labor_cost">Labor Cost</label>
+                            <input type="number" class="form-control form-control-sm breakdown-input" id="costLabor" value="0">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold" data-t="irrigation_cost">Irrigation Cost</label>
+                            <input type="number" class="form-control form-control-sm breakdown-input" id="costIrri" value="0">
+                        </div>
+                        <div class="col-md-4 d-flex align-items-end">
+                            <div class="w-100 p-2 bg-light rounded border text-center">
+                                <small class="text-muted d-block" data-t="cost_difference">Difference</small>
+                                <span class="fw-bold" id="costDiffDisplay">₹ 0</span>
+                            </div>
+                        </div>
+
+                        <div class="col-md-12">
+                            <label class="form-label fw-bold" data-t="problems_faced">Problems Faced</label>
+                            <input type="text" class="form-control" id="problemsInput" placeholder="Flood, pest attack, etc.">
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-success w-100 py-2 rounded-3 mt-4" data-t="submit">Submit</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Reminder Modal -->
+<div class="modal fade" id="reminderModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 rounded-4 shadow">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title fw-bold" id="reminderModalTitle" data-t="add_reminder">Add Reminder</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <form id="reminderForm">
+                    <input type="hidden" id="reminderId">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold" data-t="task_type">Task Type</label>
+                        <select class="form-select" id="taskType" required>
+                            <option value="Irrigation" data-t="irrigation">Irrigation</option>
+                            <option value="Fertilization" data-t="fertilization">Fertilization</option>
+                            <option value="Pest Check" data-t="pest_check">Pest Check</option>
+                        </select>
+                    </div>
+                    <div class="row">
+                        <div class="col-6 mb-3">
+                            <label class="form-label fw-bold" data-t="reminder_date">Date</label>
+                            <input type="date" class="form-control" id="reminderDate" required>
+                        </div>
+                        <div class="col-6 mb-3">
+                            <label class="form-label fw-bold" data-t="reminder_time">Time</label>
+                            <input type="time" class="form-control" id="reminderTime" required>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold" data-t="note">Note</label>
+                        <textarea class="form-control" id="reminderNote" rows="2"></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-success w-100 py-2 rounded-3 mt-3" data-t="submit">Submit</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="translations.js"></script>
+<script src="crops_data.js"></script>
+<script>
+    // Sidebar Toggle
+    const menuToggle = document.getElementById('menuToggle');
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('overlay');
+
+    menuToggle.addEventListener('click', () => {
+        sidebar.classList.add('active');
+        overlay.classList.add('active');
+    });
+
+    overlay.addEventListener('click', () => {
+        sidebar.classList.remove('active');
+        overlay.classList.remove('active');
+    });
+
+    const user = JSON.parse(localStorage.getItem('user'));
+    if (!user || user.role !== 'farmer') window.location.href = 'login.html';
+
+    // Seeding Initial Data if empty
+    if (!localStorage.getItem('currentCrops')) {
+        const initialCurrent = [
+            {
+                id: 1,
+                farmer_id: user.id,
+                name: "Wheat",
+                seed_type: "Hybrid",
+                fertilizer: "Urea, DAP",
+                pesticide: "Neem Oil",
+                sowing_date: "2025-11-15",
+                duration: 120,
+                harvest_date: "2026-03-15",
+                estimated_cost: 12500,
+                estimated_production: 45,
+                land_area: 2.5,
+                season: "Rabi",
+                status: "Growing"
+            },
+            {
+                id: 2,
+                farmer_id: user.id,
+                name: "Rice",
+                seed_type: "Hybrid",
+                fertilizer: "NPK, Urea",
+                pesticide: "None",
+                sowing_date: "2025-12-01",
+                duration: 150,
+                harvest_date: "2026-04-30",
+                estimated_cost: 18000,
+                estimated_production: 55,
+                land_area: 3.0,
+                season: "Kharif",
+                status: "Growing"
+            },
+            {
+                id: 3,
+                farmer_id: user.id,
+                name: "Cotton",
+                seed_type: "Bt Cotton",
+                fertilizer: "DAP, Potash",
+                pesticide: "Monocrotophos",
+                sowing_date: "2026-01-10",
+                duration: 180,
+                harvest_date: "2026-07-10",
+                estimated_cost: 22000,
+                estimated_production: 30,
+                land_area: 2.0,
+                season: "Kharif",
+                status: "Growing"
+            }
+        ];
+        localStorage.setItem('currentCrops', JSON.stringify(initialCurrent));
+        console.log("Initial current crops seeded.");
+    }
+    
+    if (!localStorage.getItem('pastCrops')) {
+        const initialPast = [
+            {
+                id: 4,
+                farmer_id: user.id,
+                name: "Soybean",
+                seed_type: "Organic",
+                fertilizer: "NPK, Urea",
+                pesticide: "Monocrotophos",
+                sowing_date: "2025-06-15",
+                duration: 100,
+                harvest_date: "2025-09-23",
+                total_cost: 15000,
+                total_production: 22,
+                actual_profit: 85000,
+                season: "Kharif",
+                status: "Completed"
+            },
+            {
+                id: 5,
+                farmer_id: user.id,
+                name: "Gram",
+                seed_type: "Desi",
+                fertilizer: "DAP, Potash",
+                pesticide: "None",
+                sowing_date: "2024-10-15",
+                duration: 140,
+                harvest_date: "2025-03-04",
+                total_cost: 8000,
+                total_production: 15,
+                actual_profit: 62000,
+                season: "Rabi",
+                status: "Completed"
+            },
+            {
+                id: 6,
+                farmer_id: user.id,
+                name: "Maize",
+                seed_type: "Hybrid",
+                fertilizer: "Zinc, NPK",
+                pesticide: "None",
+                sowing_date: "2025-03-01",
+                duration: 110,
+                harvest_date: "2025-06-20",
+                total_cost: 12000,
+                total_production: 25,
+                actual_profit: 45000,
+                season: "Zaid",
+                status: "Completed"
+            }
+        ];
+        localStorage.setItem('pastCrops', JSON.stringify(initialPast));
+        console.log("Initial past crops seeded.");
+    }
+
+    // Admin controlled options (Simulated)
+    const initialOptions = {
+        crops: cropsData.map(c => ({ en: c.name_en, hi: c.name_hi })),
+        seeds: [
+            { id: "seed_hybrid", en: "Hybrid", hi: "हाइब्रिड" },
+            { id: "seed_organic", en: "Organic", hi: "जैविक" },
+            { id: "seed_desi", en: "Desi", hi: "देसी" },
+            { id: "seed_gm", en: "GM", hi: "जीएम" }
+        ],
+        fertilizers: ["Urea", "DAP", "NPK", "Potash", "Organic Manure"],
+        pesticides: [
+            { id: "pest_neem", en: "Neem Oil", hi: "नीम का तेल" },
+            { id: "pest_chlor", en: "Chlorpyrifos", hi: "क्लोरपायरीफोस" },
+            { id: "pest_mono", en: "Monocrotophos", hi: "मोनोक्रोटोफोस" },
+            { id: "pest_none", en: "None", hi: "कोई नहीं" }
+        ]
+    };
+    localStorage.setItem('admin_crop_options', JSON.stringify(initialOptions));
+    const adminOptions = initialOptions;
+
+    function populateDropdowns() {
+        const lang = localStorage.getItem('krishi_mitra_lang') || 'en';
+        
+        const cropSelect = document.getElementById('cropNameSelect');
+        cropSelect.innerHTML = adminOptions.crops.map(c => `<option value="${c.en}">${lang === 'hi' ? c.hi : c.en}</option>`).join('');
+        
+        const seedSelect = document.getElementById('seedTypeSelect');
+        seedSelect.innerHTML = adminOptions.seeds.map(s => `<option value="${s.en}">${s.en} (${s.hi})</option>`).join('');
+        
+        const fertSelect = document.getElementById('fertilizerSelect');
+        fertSelect.innerHTML = adminOptions.fertilizers.map(f => `<option value="${f}">${f}</option>`).join('');
+        
+        const pestSelect = document.getElementById('pesticideSelect');
+        pestSelect.innerHTML = adminOptions.pesticides.map(p => `<option value="${p.en}">${p.en} (${p.hi})</option>`).join('');
+    }
+
+    // Auto Season Detection
+    function detectSeason(month) {
+        // Rabi: Oct-Mar, Kharif: Jun-Sep, Zaid: Mar-Jun
+        if (month >= 10 || month <= 3) return 'Rabi';
+        if (month >= 6 && month <= 9) return 'Kharif';
+        return 'Zaid';
+    }
+
+    function getCropSeason(cropName, sowingDate) {
+        const crop = cropsData.find(c => c.name_en === cropName);
+        if (crop && crop.season_en && crop.season_en !== 'Year-round' && crop.season_en !== 'Annual') {
+            return crop.season_en.split(' / ')[0]; // Take first if multiple
+        }
+        if (sowingDate) {
+            const month = new Date(sowingDate).getMonth() + 1;
+            return detectSeason(month);
+        }
+        return 'Unknown';
+    }
+
+    // Auto-calculate harvest date
+    function updateHarvestDate() {
+        const sowingDate = document.getElementById('sowingDateInput').value;
+        const duration = document.getElementById('cropDurationInput').value;
+        if (sowingDate && duration) {
+            const date = new Date(sowingDate);
+            date.setDate(date.getDate() + parseInt(duration));
+            document.getElementById('harvestDateInput').value = date.toISOString().split('T')[0];
+        }
+    }
+
+    document.getElementById('sowingDateInput').addEventListener('change', updateHarvestDate);
+    document.getElementById('cropDurationInput').addEventListener('input', updateHarvestDate);
+
+    // Crop Management Logic
+    function calculateProgress(sowingDate, duration) {
+        const start = new Date(sowingDate);
+        const today = new Date();
+        const diffTime = Math.abs(today - start);
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        let progress = Math.round((diffDays / duration) * 100);
+        if (progress > 100) progress = 100;
+        if (today < start) progress = 0;
+        return progress;
+    }
+
+    
+    function loadCrops() {
+        let growingCrops = JSON.parse(localStorage.getItem('currentCrops') || '[]');
+        let pastCrops = JSON.parse(localStorage.getItem('pastCrops') || '[]');
+        
+        // Add Demo Data if empty and filter by farmer
+        const userGrowing = growingCrops.filter(c => String(c.farmer_id) == String(user.id));
+        const userPast = pastCrops.filter(c => String(c.farmer_id) == String(user.id));
+
+        if (userGrowing.length === 0) {
+            let demoGrowing = {
+                id: Date.now(),
+                farmer_id: user.id,
+                name: 'Wheat',
+                seed_type: 'Sharbati',
+                sowing_date: new Date(Date.now() - 40 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+                duration: 120, // days
+                fertilizer: 'Urea',
+                pesticide: 'Neem Oil',
+                irrigation: 'Drip',
+                farm_size: 5,
+                season: 'Rabi'
+            };
+            growingCrops.push(demoGrowing);
+            localStorage.setItem('currentCrops', JSON.stringify(growingCrops));
+        }
+
+        if (userPast.length === 0) {
+            let demoPast = {
+                id: Date.now() + 1,
+                farmer_id: user.id,
+                name: 'Soybean',
+                seed_type: 'JS 335',
+                sowing_date: new Date(Date.now() - 150 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+                harvest_date: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+                duration: 100, // days
+                production: 20, // quintals
+                selling_price: 4500, // per quintal
+                revenue: 90000,
+                cost: 25000,
+                profit: 65000,
+                buyer: 'Indore Mandi',
+                selling_date: new Date(Date.now() - 28 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+                fertilizer: 'DAP',
+                pesticide: 'Standard',
+                irrigation: 'Rainfed',
+                farm_size: 5,
+                season: 'Kharif'
+            };
+            pastCrops.push(demoPast);
+            localStorage.setItem('pastCrops', JSON.stringify(pastCrops));
+        }
+
+        // Re-filter after potential additions
+        const growingCropsFinal = JSON.parse(localStorage.getItem('currentCrops') || '[]').filter(c => String(c.farmer_id) == String(user.id));
+        const pastCropsFinal = JSON.parse(localStorage.getItem('pastCrops') || '[]').filter(c => String(c.farmer_id) == String(user.id));
+
+        console.log("Data Loaded from localStorage:");
+        console.log("Current Crops:", growingCropsFinal);
+        console.log("Past Crops:", pastCropsFinal);
+
+        renderCurrentCrops(growingCropsFinal);
+        renderPastCrops(pastCropsFinal);
+        updateProfitChart(pastCropsFinal, growingCropsFinal);
+    }
+
+
+    function renderCurrentCrops(crops) {
+        const list = document.getElementById('currentCropsList');
+        const lang = localStorage.getItem('krishi_mitra_lang') || 'en';
+        const t = translations[lang];
+
+        if (crops.length === 0) {
+            list.innerHTML = `
+                <div class="col-12">
+                    <div class="card crop-card shadow-sm p-5 text-center text-muted">
+                        <i class="bi bi-plus-circle display-4 mb-3"></i>
+                        <p>No active crops. Add one to start tracking!</p>
+                    </div>
+                </div>
+            `;
+            return;
+        }
+
+        list.innerHTML = crops.map(crop => {
+            const progress = calculateProgress(crop.sowing_date, crop.duration);
+            const cropData = cropsData.find(c => c.name_en === crop.name) || {};
+            
+            return `
+                <div class="col-12">
+                    <div class="card crop-card shadow-sm p-4 position-relative mb-3">
+                        <span class="badge bg-success badge-status">${lang === 'hi' ? 'बढ़ रही है' : 'Growing'}</span>
+                        <div class="row align-items-center">
+                            <div class="col-md-2 text-center">
+                                <i class="bi bi-tree text-success display-1"></i>
+                            </div>
+                            <div class="col-md-10">
+                                <div class="row">
+                                    <div class="col-md-4 mb-3">
+                                        <small class="text-muted d-block" data-t="my_crops">${t.my_crops}</small>
+                                        <span class="fs-5 fw-bold">${lang === 'hi' ? (cropData.name_hi || crop.name) : crop.name}</span>
+                                    </div>
+                                    <div class="col-md-4 mb-3">
+                                        <small class="text-muted d-block" data-t="sowing_date">${t.sowing_date}</small>
+                                        <span class="fs-5 fw-bold">${new Date(crop.sowing_date).toLocaleDateString()}</span>
+                                    </div>
+                                    <div class="col-md-4 mb-3">
+                                        <small class="text-muted d-block" data-t="seed_type">${t.seed_type}</small>
+                                        <span class="fs-5 fw-bold">${crop.seed_type}</span>
+                                    </div>
+                                    <div class="col-md-4 mb-3">
+                                        <small class="text-muted d-block" data-t="fertilizers">${t.fertilizers}</small>
+                                        <span class="fs-5 fw-bold">${crop.fertilizer}</span>
+                                    </div>
+                                    <div class="col-md-4 mb-3">
+                                        <small class="text-muted d-block" data-t="pesticides">${t.pesticides}</small>
+                                        <span class="fs-5 fw-bold">${crop.pesticide}</span>
+                                    </div>
+                                    <div class="col-md-4 mb-3">
+                                        <small class="text-muted d-block" data-t="total_cost">${t.total_cost}</small>
+                                        <span class="fs-5 fw-bold text-danger">₹ ${crop.estimated_cost}</span>
+                                    </div>
+                                    <div class="col-md-4 mb-3">
+                                        <small class="text-muted d-block" data-t="estimated_production">${t.estimated_production}</small>
+                                        <span class="fs-5 fw-bold text-primary">${crop.estimated_production} Quintals</span>
+                                    </div>
+                                    <div class="col-md-4 mb-3">
+                                        <small class="text-muted d-block" data-t="crop_duration">${t.crop_duration}</small>
+                                        <span class="fs-5 fw-bold">${crop.duration} ${t.days}</span>
+                                    </div>
+                                    <div class="col-md-4 mb-3">
+                                        <small class="text-muted d-block" data-t="land_area">${t.land_area}</small>
+                                        <span class="fs-5 fw-bold">${crop.land_area || 'N/A'} Acres</span>
+                                    </div>
+                                    <div class="col-md-4 mb-3">
+                                        <small class="text-muted d-block" data-t="season">${t.season}</small>
+                                        <span class="fs-5 fw-bold">${t[crop.season.toLowerCase()] || crop.season}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <hr>
+                        <div class="row">
+                            <div class="col-md-6 mb-4">
+                                <h6 class="fw-bold" data-t="progress">${t.progress} (${progress}%)</h6>
+                                <div class="progress mb-3" style="height: 20px;">
+                                    <div class="progress-bar bg-success progress-bar-striped progress-bar-animated" style="width: ${progress}%">${progress}%</div>
+                                </div>
+                                <div class="d-flex gap-2">
+                                    <button class="btn btn-outline-primary btn-sm rounded-pill px-3" onclick="openEditDurationModal(${crop.id}, ${crop.duration})">
+                                        <i class="bi bi-pencil me-1"></i> ${t.edit_duration}
+                                    </button>
+                                    <button class="btn btn-success btn-sm rounded-pill px-3" onclick="openCompleteCropModal(${crop.id})">
+                                        <i class="bi bi-check-circle me-1"></i> ${t.mark_completed}
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <h6 class="fw-bold" data-t="smart_suggestions">${t.smart_suggestions}</h6>
+                                <ul class="list-group list-group-flush">
+                                    <li class="list-group-item bg-transparent px-0 border-0 py-1"><i class="bi bi-calendar-check text-warning me-2"></i> ${t.expected_harvest_date}: ${new Date(crop.harvest_date).toLocaleDateString()}</li>
+                                    <li class="list-group-item bg-transparent px-0 border-0 py-1"><i class="bi bi-shield-check text-success me-2"></i> <span class="fw-bold text-success" data-t="health_tips">${t.health_tips}</span></li>
+                                    <li class="list-group-item bg-transparent px-0 border-0 py-1 ps-4"><i class="bi bi-dot text-success"></i> ${t.health_tip_rust}</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    function renderPastCrops(crops) {
+        const list = document.getElementById('pastCropsList');
+        const lang = localStorage.getItem('krishi_mitra_lang') || 'en';
+        const t = translations[lang];
+
+        if (crops.length === 0) {
+            list.innerHTML = `<div class="col-12 text-center py-4 text-muted">No past crops found.</div>`;
+            return;
+        }
+
+        list.innerHTML = crops.map(c => {
+            const cropData = cropsData.find(cd => cd.name_en === c.name) || {};
+            return `
+                <div class="col-md-6">
+                    <div class="card crop-card shadow-sm p-4 cursor-pointer" onclick="window.location.href='past_crop_detail.html?id=${c.id}'">
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <div>
+                                <h5 class="fw-bold mb-0">${lang === 'hi' ? (cropData.name_hi || c.name) : c.name}</h5>
+                                <small class="text-muted">${new Date(c.sowing_date).getFullYear()}</small>
+                            </div>
+                            <span class="badge bg-secondary">${lang === 'hi' ? 'काटी गई' : 'Harvested'}</span>
+                        </div>
+                        <div class="row g-3">
+                            <div class="col-6">
+                                <small class="text-muted d-block" data-t="total_cost">${t.total_cost}</small>
+                                <span class="fw-bold">₹ ${c.total_cost}</span>
+                            </div>
+                            <div class="col-6">
+                                <small class="text-muted d-block" data-t="total_production_label">${t.total_production_label}</small>
+                                <span class="fw-bold">${c.total_production} Quintals</span>
+                            </div>
+                            <div class="col-6">
+                                <small class="text-muted d-block" data-t="actual_profit">${t.actual_profit}</small>
+                                <span class="fw-bold text-success">₹ ${c.actual_profit}</span>
+                            </div>
+                            <div class="col-6">
+                                <small class="text-muted d-block" data-t="season">${t.season}</small>
+                                <span class="fw-bold">${t[c.season.toLowerCase()] || c.season}</span>
+                            </div>
+                        </div>
+                        <div class="mt-3 text-end">
+                            <span class="btn btn-sm btn-link text-success p-0" data-t="read_more">${t.read_more} <i class="bi bi-arrow-right"></i></span>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    // Modal Operations
+    document.getElementById('addCropForm').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const currentCrops = JSON.parse(localStorage.getItem('currentCrops') || '[]');
+        
+        const sowingDate = document.getElementById('sowingDateInput').value;
+        const cropName = document.getElementById('cropNameSelect').value;
+        
+        const newCrop = {
+            id: Date.now(),
+            farmer_id: user.id,
+            name: cropName,
+            seed_type: document.getElementById('seedTypeSelect').value,
+            fertilizer: document.getElementById('fertilizerSelect').value,
+            pesticide: document.getElementById('pesticideSelect').value,
+            sowing_date: sowingDate,
+            duration: parseInt(document.getElementById('cropDurationInput').value),
+            harvest_date: document.getElementById('harvestDateInput').value,
+            estimated_cost: parseFloat(document.getElementById('estCostInput').value),
+            estimated_production: parseFloat(document.getElementById('estProductionInput').value),
+            land_area: parseFloat(document.getElementById('landAreaInput').value),
+            season: getCropSeason(cropName, sowingDate),
+            status: 'Growing'
+        };
+
+        currentCrops.push(newCrop);
+        localStorage.setItem('currentCrops', JSON.stringify(currentCrops));
+        console.log("New crop added to currentCrops:", newCrop);
+        
+        bootstrap.Modal.getInstance(document.getElementById('addCropModal')).hide();
+        document.getElementById('addCropForm').reset();
+        loadCrops();
+        Swal.fire('Success', 'Crop added successfully!', 'success');
+    });
+
+    let activeCropId = null;
+    function openEditDurationModal(id, currentDuration) {
+        activeCropId = id;
+        document.getElementById('editDurationInput').value = currentDuration;
+        new bootstrap.Modal(document.getElementById('editDurationModal')).show();
+    }
+
+    document.getElementById('editDurationForm').addEventListener('submit', (e) => {
+        e.preventDefault();
+        let currentCrops = JSON.parse(localStorage.getItem('currentCrops') || '[]');
+        currentCrops = currentCrops.map(c => {
+            if (c.id == activeCropId) {
+                return { ...c, duration: parseInt(document.getElementById('editDurationInput').value) };
+            }
+            return c;
+        });
+        localStorage.setItem('currentCrops', JSON.stringify(currentCrops));
+        console.log("Crop duration updated in currentCrops for ID:", activeCropId);
+        bootstrap.Modal.getInstance(document.getElementById('editDurationModal')).hide();
+        loadCrops();
+    });
+
+    function openCompleteCropModal(id) {
+        activeCropId = id;
+        const currentCrops = JSON.parse(localStorage.getItem('currentCrops') || '[]');
+        const crop = currentCrops.find(c => c.id == id);
+        
+        if (crop) {
+            // Pre-fill some defaults if needed
+            document.getElementById('totalCostInput').value = crop.estimated_cost || '';
+            document.getElementById('totalProductionInput').value = crop.estimated_production || '';
+            document.getElementById('fertNameInput').value = crop.fertilizer || '';
+        }
+        
+        new bootstrap.Modal(document.getElementById('completeCropModal')).show();
+    }
+
+    // Cost Breakdown Difference Calculation
+    function updateCostDifference() {
+        const totalCost = parseFloat(document.getElementById('totalCostInput').value) || 0;
+        const costSeed = parseFloat(document.getElementById('costSeed').value) || 0;
+        const costFert = parseFloat(document.getElementById('costFert').value) || 0;
+        const costPest = parseFloat(document.getElementById('costPest').value) || 0;
+        const costLabor = parseFloat(document.getElementById('costLabor').value) || 0;
+        const costIrri = parseFloat(document.getElementById('costIrri').value) || 0;
+        
+        const sum = costSeed + costFert + costPest + costLabor + costIrri;
+        const diff = totalCost - sum;
+        
+        const display = document.getElementById('costDiffDisplay');
+        display.innerText = `₹ ${diff.toLocaleString()}`;
+        display.className = diff === 0 ? 'fw-bold text-success' : 'fw-bold text-danger';
+    }
+
+    document.getElementById('totalCostInput').addEventListener('input', updateCostDifference);
+    document.querySelectorAll('.breakdown-input').forEach(input => {
+        input.addEventListener('input', updateCostDifference);
+    });
+
+    // Market Prices for Auto-calculation
+    const marketPrices = {
+        "Wheat": 2450,
+        "Rice": 3100,
+        "Soybean": 4800,
+        "Cotton": 6500,
+        "Maize": 2100,
+        "Gram": 5200,
+        "Mustard": 5400,
+        "Sugarcane": 350,
+        "Potato": 1200,
+        "Tomato": 1500,
+        "Onion": 1800,
+        "Bajra": 2350,
+        "Jowar": 2900,
+        "Groundnut": 6000,
+        "Barley": 2000
+    };
+
+    function getMarketPrice(cropName) {
+        return marketPrices[cropName] || 2000; // Default if not found
+    }
+
+    document.getElementById('completeCropForm').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const lang = localStorage.getItem('krishi_mitra_lang') || 'en';
+        const t = translations[lang];
+
+        let currentCrops = JSON.parse(localStorage.getItem('currentCrops') || '[]');
+        let pastCrops = JSON.parse(localStorage.getItem('pastCrops') || '[]');
+        
+        const cropToComplete = currentCrops.find(c => String(c.id) == String(activeCropId));
+        if (!cropToComplete) return;
+
+        const totalCost = parseFloat(document.getElementById('totalCostInput').value);
+        const totalProduction = parseFloat(document.getElementById('totalProductionInput').value);
+        const sellingPriceInput = document.getElementById('sellingPriceInput').value;
+        const sellingPrice = sellingPriceInput ? parseFloat(sellingPriceInput) : null;
+        const actualProfitInput = document.getElementById('totalProfitInput').value;
+
+        // Cost Breakdown Validation
+        const costSeed = parseFloat(document.getElementById('costSeed').value) || 0;
+        const costFert = parseFloat(document.getElementById('costFert').value) || 0;
+        const costPest = parseFloat(document.getElementById('costPest').value) || 0;
+        const costLabor = parseFloat(document.getElementById('costLabor').value) || 0;
+        const costIrri = parseFloat(document.getElementById('costIrri').value) || 0;
+        const breakdownSum = costSeed + costFert + costPest + costLabor + costIrri;
+
+        if (Math.abs(breakdownSum - totalCost) > 0.01) {
+            Swal.fire('Warning', t.cost_mismatch_warning || 'Cost breakdown is not equal to total cost. Please adjust values.', 'warning');
+            return;
+        }
+
+        const marketPrice = getMarketPrice(cropToComplete.name);
+        const effectiveSellingPrice = sellingPrice !== null ? sellingPrice : marketPrice;
+        const totalIncome = totalProduction * effectiveSellingPrice;
+        
+        // Auto calculate profit if not entered
+        const finalProfit = (actualProfitInput !== "" && actualProfitInput !== null) ? parseFloat(actualProfitInput) : (totalIncome - totalCost);
+
+        // Auto assign soil type if not selected
+        let soilType = document.getElementById('soilTypeSelect').value;
+        if (!soilType) {
+            const cropData = cropsData.find(cd => cd.name_en === cropToComplete.name);
+            soilType = cropData ? cropData.soil_en.split(',')[0] : 'Loamy';
+        }
+
+        const completedCrop = { 
+            ...cropToComplete, 
+            status: 'Completed',
+            total_cost: totalCost,
+            total_production: totalProduction,
+            selling_price: effectiveSellingPrice,
+            total_income: totalIncome,
+            actual_profit: finalProfit,
+            market_price: marketPrice,
+            problems: document.getElementById('problemsInput').value,
+            cost_seed: costSeed,
+            cost_fert: costFert,
+            cost_pest: costPest,
+            cost_labor: costLabor,
+            cost_irri: costIrri,
+            soil_type: soilType,
+            spray_count: parseInt(document.getElementById('sprayCountInput').value) || 0,
+            fertilizer_quantity: parseFloat(document.getElementById('fertQuantityInput').value) || 0,
+            fertilizer_name: document.getElementById('fertNameInput').value || cropToComplete.fertilizer
+        };
+
+        // STEP 1: Remove from currentCrops
+        currentCrops = currentCrops.filter(c => String(c.id) != String(activeCropId));
+        
+        // STEP 2: Add to pastCrops
+        pastCrops.push(completedCrop);
+
+        // STEP 3: Save updated arrays to localStorage
+        localStorage.setItem('currentCrops', JSON.stringify(currentCrops));
+        localStorage.setItem('pastCrops', JSON.stringify(pastCrops));
+        
+        console.log("Crop completed and moved from currentCrops to pastCrops.");
+        console.log("Completed Crop Details:", completedCrop);
+
+        bootstrap.Modal.getInstance(document.getElementById('completeCropModal')).hide();
+        document.getElementById('completeCropForm').reset();
+        loadCrops();
+        Swal.fire('Success', 'Crop marked as completed and moved to past crops!', 'success');
+    });
+
+    // Reminders Logic
+    function loadReminders() {
+        const reminders = JSON.parse(localStorage.getItem('farmer_reminders') || '[]')
+            .filter(r => r.farmer_id === user.id);
+        
+        const list = document.getElementById('reminderList');
+        const lang = localStorage.getItem('krishi_mitra_lang') || 'en';
+        const t = translations[lang];
+
+        if (reminders.length === 0) {
+            list.innerHTML = `<div class="col-12 text-center py-5 text-muted">
+                <i class="bi bi-calendar-x display-4 d-block mb-3"></i>
+                <p data-t="no_reminders">${t.no_reminders}</p>
+            </div>`;
+            return;
+        }
+
+        list.innerHTML = reminders.map(r => {
+            let icon = 'bi-droplet-fill';
+            let color = '#0d6efd';
+            let bgLight = 'rgba(13, 110, 253, 0.1)';
+            
+            if (r.type === 'Fertilization') { 
+                icon = 'bi-patch-check-fill'; 
+                color = '#198754';
+                bgLight = 'rgba(25, 135, 84, 0.1)';
+            }
+            if (r.type === 'Pest Check') { 
+                icon = 'bi-bug-fill'; 
+                color = '#dc3545';
+                bgLight = 'rgba(220, 53, 69, 0.1)';
+            }
+
+            const isCompleted = r.completed === true;
+
+            return `
+                <div class="col-md-6 col-lg-4">
+                    <div class="reminder-card p-3 h-100 ${isCompleted ? 'completed' : ''}">
+                        <div class="d-flex align-items-start mb-3">
+                            <div class="reminder-type-icon me-3" style="background: ${isCompleted ? '#e9ecef' : bgLight}; color: ${isCompleted ? '#6c757d' : color};">
+                                <i class="bi ${isCompleted ? 'bi-check-all' : icon}"></i>
+                            </div>
+                            <div class="flex-grow-1">
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <h6 class="fw-bold mb-0 ${isCompleted ? 'text-decoration-line-through text-muted' : ''}">
+                                        ${t[r.type.toLowerCase().replace(' ', '_')] || r.type}
+                                    </h6>
+                                    ${!isCompleted ? `<span class="status-dot" style="background: ${color};"></span>` : ''}
+                                </div>
+                                <div class="reminder-time text-muted">
+                                    <i class="bi bi-calendar3 me-1"></i> ${r.date}
+                                    <span class="mx-1">|</span>
+                                    <i class="bi bi-clock me-1"></i> ${r.time}
+                                </div>
+                                ${r.note ? `<div class="small text-muted mt-2 border-top pt-1"><i class="bi bi-sticky me-1"></i> ${r.note}</div>` : ''}
+                            </div>
+                        </div>
+                        
+                        <div class="d-flex gap-2">
+                            ${!isCompleted ? `
+                                <button class="btn btn-sm btn-success flex-grow-1 rounded-pill" onclick="toggleReminder(${r.id})">
+                                    <i class="bi bi-check2-circle me-1"></i> ${t.mark_as_done}
+                                </button>
+                                <button class="btn btn-sm btn-outline-primary rounded-circle p-0 d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;" onclick="openEditReminderModal(${r.id})">
+                                    <i class="bi bi-pencil"></i>
+                                </button>
+                            ` : `
+                                <button class="btn btn-sm btn-light flex-grow-1 rounded-pill text-muted" disabled>
+                                    <i class="bi bi-check-circle-fill me-1 text-success"></i> ${t.completed}
+                                </button>
+                            `}
+                            <button class="btn btn-sm btn-outline-danger rounded-circle p-0 d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;" onclick="deleteReminder(${r.id})">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    function openEditReminderModal(id) {
+        const reminders = JSON.parse(localStorage.getItem('farmer_reminders') || '[]');
+        const r = reminders.find(rem => rem.id === id);
+        if (r) {
+            document.getElementById('reminderId').value = r.id;
+            document.getElementById('taskType').value = r.type;
+            document.getElementById('reminderDate').value = r.date;
+            document.getElementById('reminderTime').value = r.time;
+            document.getElementById('reminderNote').value = r.note || '';
+            document.getElementById('reminderModalTitle').innerText = translations[localStorage.getItem('krishi_mitra_lang') || 'en'].edit_reminder;
+            new bootstrap.Modal(document.getElementById('reminderModal')).show();
+        }
+    }
+
+    document.getElementById('reminderForm').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const lang = localStorage.getItem('krishi_mitra_lang') || 'en';
+        const t = translations[lang];
+        const id = document.getElementById('reminderId').value;
+
+        let reminders = JSON.parse(localStorage.getItem('farmer_reminders') || '[]');
+        
+        if (id) {
+            // Edit
+            reminders = reminders.map(r => {
+                if (r.id == id) {
+                    return {
+                        ...r,
+                        type: document.getElementById('taskType').value,
+                        date: document.getElementById('reminderDate').value,
+                        time: document.getElementById('reminderTime').value,
+                        note: document.getElementById('reminderNote').value
+                    };
+                }
+                return r;
+            });
+        } else {
+            // Add
+            const newReminder = {
+                id: Date.now(),
+                farmer_id: user.id,
+                type: document.getElementById('taskType').value,
+                date: document.getElementById('reminderDate').value,
+                time: document.getElementById('reminderTime').value,
+                note: document.getElementById('reminderNote').value,
+                completed: false
+            };
+            reminders.push(newReminder);
+        }
+
+        localStorage.setItem('farmer_reminders', JSON.stringify(reminders));
+        bootstrap.Modal.getInstance(document.getElementById('reminderModal')).hide();
+        document.getElementById('reminderForm').reset();
+        document.getElementById('reminderId').value = '';
+        document.getElementById('reminderModalTitle').innerText = t.add_reminder;
+
+        Swal.fire({
+            icon: 'success',
+            title: id ? 'Reminder updated!' : t.reminder_added,
+            timer: 2000,
+            showConfirmButton: false
+        });
+
+        loadReminders();
+    });
+
+    function toggleReminder(id) {
+        let reminders = JSON.parse(localStorage.getItem('farmer_reminders') || '[]');
+        reminders = reminders.map(r => {
+            if (r.id === id) {
+                return { ...r, completed: true };
+            }
+            return r;
+        });
+        localStorage.setItem('farmer_reminders', JSON.stringify(reminders));
+        loadReminders();
+    }
+
+    function deleteReminder(id) {
+        let reminders = JSON.parse(localStorage.getItem('farmer_reminders') || '[]');
+        reminders = reminders.filter(r => r.id !== id);
+        localStorage.setItem('farmer_reminders', JSON.stringify(reminders));
+        loadReminders();
+    }
+
+    // Chart Logic
+    let profitChartInstance = null;
+    function updateProfitChart(pastCrops, growingCrops) {
+        const ctx = document.getElementById('profitChart').getContext('2d');
+        const lang = localStorage.getItem('krishi_mitra_lang') || 'en';
+        const t = translations[lang];
+
+        if (profitChartInstance) profitChartInstance.destroy();
+
+        const labels = pastCrops.map(c => {
+            const date = c.sowing_date ? new Date(c.sowing_date) : new Date();
+            return `${c.name} (${date.getFullYear()})`;
+        });
+        const costData = pastCrops.map(c => c.total_cost || 0);
+        const profitData = pastCrops.map(c => c.actual_profit || 0);
+
+        if (growingCrops && growingCrops.length > 0) {
+            growingCrops.forEach(c => {
+                labels.push(`${c.name} (Est.)`);
+                costData.push(c.estimated_cost || 0);
+                profitData.push(0);
+            });
+        }
+
+        profitChartInstance = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        label: t.total_cost,
+                        data: costData,
+                        backgroundColor: 'rgba(220, 53, 69, 0.7)',
+                        borderColor: '#dc3545',
+                        borderWidth: 1,
+                        borderRadius: 5
+                    },
+                    {
+                        label: t.actual_profit,
+                        data: profitData,
+                        backgroundColor: 'rgba(25, 135, 84, 0.7)',
+                        borderColor: '#198754',
+                        borderWidth: 1,
+                        borderRadius: 5
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'top', labels: { usePointStyle: true, padding: 20 } },
+                    tooltip: {
+                        backgroundColor: 'rgba(0,0,0,0.8)',
+                        padding: 12,
+                        titleFont: { size: 14 },
+                        bodyFont: { size: 13 },
+                        callbacks: {
+                            label: function(context) {
+                                return context.dataset.label + ': ₹ ' + context.raw.toLocaleString();
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: { color: 'rgba(0,0,0,0.05)' },
+                        ticks: {
+                            callback: function(value) { return '₹' + value.toLocaleString(); }
+                        }
+                    },
+                    x: { grid: { display: false } }
+                }
+            }
+        });
+    }
+
+    function updateUI() {
+        applyTranslations();
+        populateDropdowns();
+        loadCrops();
+        loadReminders();
+    }
+
+    updateUI();
+
+    // Listen for language changes
+    window.addEventListener('storage', (e) => {
+        if (e.key === 'krishi_mitra_lang') {
+            updateUI();
+        }
+    });
+</script>
+</body>
+</html>

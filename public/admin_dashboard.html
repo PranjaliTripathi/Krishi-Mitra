@@ -1,0 +1,1584 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Krishi Mitra</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/hi.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f0f2f5; margin: 0; }
+
+        body { font-family: 'Inter', sans-serif; background-color: #f0f2f5; margin: 0; }
+        
+        /* Fixed Header */
+        .top-header { 
+            position: fixed; top: 0; left: 0; width: 100%; height: 60px; 
+            background: #fff; box-shadow: 0 2px 5px rgba(0,0,0,0.1); 
+            display: flex; justify-content: flex-end; align-items: center; 
+            padding: 0 20px; z-index: 9997; gap: 15px; 
+        }
+
+        /* Fixed Navigation Row */
+        .nav-row {
+            position: fixed; top: 60px; left: 0; width: 100%; height: 40px;
+            background: #f8f9fa; display: flex; justify-content: space-between;
+            align-items: center; padding: 0 20px; z-index: 9996;
+            border-bottom: 1px solid #ddd;
+        }
+
+        /* New Custom Sidebar */
+        .admin-sidebar { 
+            position: fixed; top: 0; left: -250px; width: 250px; height: 100vh; 
+            background: linear-gradient(180deg, #1a1a1a 0%, #1a531b 100%); 
+            color: white; z-index: 9999; 
+            transition: left 0.3s ease-in-out; 
+            overflow-y: auto; padding-top: 60px;
+        }
+        .admin-sidebar.active { left: 0; }
+        .admin-sidebar a { 
+            display: flex; align-items: center; padding: 15px 20px; 
+            color: white; text-decoration: none; transition: background 0.2s; 
+        }
+        .admin-sidebar a:hover { background: rgba(40, 167, 69, 0.5); }
+        
+        /* Hamburger Icon */
+        .menu-toggle { 
+            position: fixed; top: 15px; left: 15px; z-index: 10000; 
+            font-size: 24px; cursor: pointer; color: #1a531b; 
+        }
+        
+        /* Overlay */
+        .sidebar-overlay { 
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+            background: rgba(0,0,0,0.5); z-index: 9998; display: none; 
+        }
+        .sidebar-overlay.active { display: block; }
+
+        .main-content { padding: 40px; padding-top: 120px; }
+    </style>
+</head>
+<body>
+    <div class="top-header">
+        <a href="javascript:void(0)" id="btnProfile"><i class="bi bi-person-circle fs-4 text-dark"></i></a>
+        <button class="btn btn-outline-success btn-sm" id="btnToggleLang"><span id="langToggleText">Eng</span></button>
+        <button class="btn btn-danger btn-sm" id="btnLogout" data-t="logout">Logout</button>
+    </div>
+    
+    <div class="nav-row">
+        <button class="btn btn-link text-dark fw-bold text-decoration-none" id="btnBack"><i class="bi bi-arrow-left"></i> <span data-t="back">Back</span></button>
+        <button class="btn btn-link text-dark fw-bold text-decoration-none" id="btnHome"><i class="bi bi-house"></i> <span data-t="home">Home</span></button>
+    </div>
+
+    <div class="menu-toggle" id="menuToggle"><i class="bi bi-list"></i></div>
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <div class="admin-sidebar sidebar" id="adminSidebar">
+        <div class="px-4 mb-4">
+            <h5 class="fw-bold" data-t="admin_panel">Admin Panel</h5>
+        </div>
+        <nav>
+            <a href="javascript:void(0)" id="nav_dashboard" onclick="showSection('dashboard', this)"><i class="bi bi-bar-chart"></i> <span data-t="dashboard">Dashboard</span></a>
+            <a href="javascript:void(0)" id="nav_admWeather" onclick="showSection('admWeather', this)"><i class="bi bi-cloud-sun"></i> <span data-t="weather">Weather</span></a>
+            <a href="javascript:void(0)" id="nav_admMandi" onclick="showSection('admMandi', this)"><i class="bi bi-graph-up"></i> <span data-t="mandi_prices">Market Prices</span></a>
+            <a href="javascript:void(0)" id="nav_crops" onclick="showSection('crops', this)"><i class="bi bi-tree"></i> <span data-t="manage_crops">Manage Crops</span></a>
+            <a href="javascript:void(0)" id="nav_admSchemes" onclick="showSection('admSchemes', this)"><i class="bi bi-bank"></i> <span data-t="schemes">Schemes</span></a>
+            <a href="javascript:void(0)" id="nav_admNotifications" onclick="showSection('admNotifications', this)"><i class="bi bi-bell"></i> <span data-t="notifications">Notifications</span></a>
+            <a href="javascript:void(0)" id="nav_admQueries" onclick="showSection('admQueries', this)"><i class="bi bi-chat"></i> <span data-t="farmer_queries">Farmer Queries</span></a>
+            <a href="javascript:void(0)" id="nav_users" onclick="showSection('users', this)"><i class="bi bi-people"></i> <span data-t="user_management">User Management</span></a>
+            <a href="javascript:void(0)" id="nav_admProfile" onclick="showSection('admProfile', this)"><i class="bi bi-person"></i> <span data-t="profile">Profile</span></a>
+            <a href="javascript:void(0)" id="nav_admLandingPage" onclick="showSection('admLandingPage', this)"><i class="bi bi-globe"></i> <span data-t="landing_page">Landing Page</span></a>
+            <a href="javascript:handleLogout()" class="text-danger"><i class="bi bi-door-open"></i> <span data-t="logout">Logout</span></a>
+        </nav>
+    </div>
+
+    <!-- Early script removed -->
+
+<div class="main-content">
+    <!-- 1. Dashboard -->
+    <div id="dashboard">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="fw-bold mb-0" data-t="admin_overview">Admin Overview</h2>
+        </div>
+
+        <div class="row g-4 mb-4">
+            <!-- Stat cards -->
+            <div class="col-md-3">
+                <div class="card p-4 border-0 shadow-sm rounded-4 h-100 cursor-pointer hover-shadow" id="cardUsers">
+                    <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <h6 class="text-muted text-uppercase small fw-bold mb-1" data-t="total_users">Total Users</h6>
+                        <h3 class="fw-bold mb-0" id="dashTotalUsers">0</h3>
+                    </div>
+                    <div class="p-2 bg-primary bg-opacity-10 text-primary rounded-3"><i class="bi bi-people fs-4"></i></div>
+                    </div>
+                    <div class="mt-3 text-success small fw-bold"><i class="bi bi-arrow-up-right me-1"></i> <span data-t="steady_growth">Steady growth</span></div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card p-4 border-0 shadow-sm rounded-4 h-100 cursor-pointer hover-shadow" id="cardCrops">
+                    <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <h6 class="text-muted text-uppercase small fw-bold mb-1" data-t="total_crops">Total Crops</h6>
+                        <h3 class="fw-bold mb-0 text-success" id="totalCrops">0</h3>
+                    </div>
+                    <div class="p-2 bg-success bg-opacity-10 text-success rounded-3"><i class="bi bi-tree fs-4"></i></div>
+                    </div>
+                    <div class="mt-3 text-success small fw-bold"><i class="bi bi-arrow-up-right me-1"></i> <span data-t="latest_added">Latest added</span></div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card p-4 border-0 shadow-sm rounded-4 h-100 cursor-pointer hover-shadow" id="cardQueries">
+                    <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <h6 class="text-muted text-uppercase small fw-bold mb-1" data-t="pending_queries">Pending Queries</h6>
+                        <h3 class="fw-bold mb-0 text-warning" id="pendingQueries">0</h3>
+                    </div>
+                    <div class="p-2 bg-warning bg-opacity-10 text-warning rounded-3"><i class="bi bi-question-circle fs-4"></i></div>
+                    </div>
+                    <div class="mt-3 text-danger small fw-bold"><i class="bi bi-exclamation-circle me-1"></i> <span data-t="needs_attention">Needs attention</span></div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card p-4 border-0 shadow-sm rounded-4 h-100 cursor-pointer hover-shadow" id="cardAlerts">
+                    <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <h6 class="text-muted text-uppercase small fw-bold mb-1" data-t="total_notifications">Total Notifications</h6>
+                        <h3 class="fw-bold mb-0 text-danger" id="dashTotalAlerts">0</h3>
+                    </div>
+                    <div class="p-2 bg-danger bg-opacity-10 text-danger rounded-3"><i class="bi bi-bell fs-4"></i></div>
+                    </div>
+                    <div class="mt-3 text-success small fw-bold"><i class="bi bi-check-circle me-1"></i> <span data-t="active_broadcasting">Active broadcasting</span></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-4 mb-4">
+            <div class="col-md-4">
+                <div class="card border-0 shadow-sm rounded-4 h-100 p-4">
+                    <h6 class="fw-bold mb-4" data-t="weather_summary">Weather Summary</h6>
+                    <div id="dashWeather"></div>
+                </div>
+            </div>
+            <div class="col-md-5">
+                <div class="card border-0 shadow-sm rounded-4 h-100 p-4 cursor-pointer hover-shadow" onclick="showSection('admMandi', document.getElementById('nav_admMandi'))">
+                    <h6 class="fw-bold mb-4" data-t="market_price_summary">Market Price Summary</h6>
+                    <div class="table-responsive">
+                        <table class="table table-borderless table-sm mb-0">
+                            <thead class="border-bottom text-muted small"><tr><th data-t="crop_name">Crop Name</th><th data-t="price">Price (₹/q)</th><th data-t="trend">Trend</th><th data-t="last_updated" class="text-end">Updated</th></tr></thead>
+                            <tbody id="dashMarketPrices"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card border-0 shadow-sm rounded-4 h-100 p-4 bg-success text-white">
+                    <h6 class="fw-bold mb-4" data-t="quick_actions">Quick Actions</h6>
+                    <div class="d-grid gap-3">
+                        <button class="btn btn-light text-success fw-bold text-start shadow-sm" onclick="showSection('crops')"><i class="bi bi-plus-circle me-2"></i> <span data-t="add_crop_btn">Add Crop</span></button>
+                        <button class="btn btn-light text-success fw-bold text-start shadow-sm" onclick="showSection('admMandi')"><i class="bi bi-graph-up-arrow me-2"></i> <span data-t="add_market_price_btn">Add Market Price</span></button>
+                        <button class="btn btn-light text-success fw-bold text-start shadow-sm" onclick="window.openNotifModal('notification')"><i class="bi bi-bell me-2"></i> <span data-t="add_alert">Add Alert</span></button>
+                        <button class="btn btn-light text-success fw-bold text-start shadow-sm" onclick="showSection('users')"><i class="bi bi-person-plus me-2"></i> <span data-t="manage_users_btn">Add User</span></button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-4 mb-4">
+            <div class="col-md-4">
+                <div class="card border-0 shadow-sm rounded-4 p-4 h-100 cursor-pointer hover-shadow" onclick="showChartDetail('user_growth')">
+                    <h6 class="fw-bold mb-4" data-t="user_growth">User Growth</h6>
+                    <div style="height: 250px; position: relative;" id="growthContainer">
+                        <canvas id="userGrowthChart"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card border-0 shadow-sm rounded-4 p-4 h-100 cursor-pointer hover-shadow" onclick="showChartDetail('crop_distribution')">
+                    <h6 class="fw-bold mb-4" data-t="crop_distribution">Crop Distribution</h6>
+                    <div style="height: 250px; position: relative;" id="distContainer">
+                        <canvas id="cropDistChart"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card border-0 shadow-sm rounded-4 p-4 h-100 cursor-pointer hover-shadow" onclick="showChartDetail('market_trends')">
+                    <h6 class="fw-bold mb-4" data-t="market_trends">Market Trends</h6>
+                    <div style="height: 250px; position: relative;" id="trendContainer">
+                        <canvas id="marketTrendChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-4 mb-4">
+            <div class="col-md-4">
+                <div class="card border-0 shadow-sm rounded-4 p-4 h-100">
+                    <h6 class="fw-bold mb-4" data-t="recent_users">Recent Users</h6>
+                    <div class="table-responsive">
+                        <table class="table table-borderless table-sm mb-0 align-middle">
+                            <thead class="border-bottom text-muted small"><tr><th data-t="name">Name</th><th data-t="role">Role</th><th data-t="status" class="text-end">Status</th></tr></thead>
+                            <tbody id="dashRecentUsers"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card border-0 shadow-sm rounded-4 p-4 h-100">
+                    <h6 class="fw-bold mb-4" data-t="recent_logs">Recent Activity Logs</h6>
+                    <div class="table-responsive">
+                        <table class="table table-borderless table-sm mb-0 align-middle">
+                            <thead class="border-bottom text-muted small"><tr><th data-t="admin_name">Admin</th><th data-t="action">Action</th><th data-t="date" class="text-end">Date</th></tr></thead>
+                            <tbody id="dashRecentLogs"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card border-0 shadow-sm rounded-4 p-4 h-100">
+                    <h6 class="fw-bold mb-4" data-t="latest_alerts">Latest Alerts</h6>
+                    <div id="dashAlertsList" class="d-flex flex-column gap-3"></div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- 1.1 Chart Details Section -->
+    <div id="chartDetail" style="display: none;">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <button class="btn btn-light rounded-pill mb-2 border-0 shadow-sm" onclick="showSection('dashboard')"><i class="bi bi-arrow-left me-2"></i> Back to Dashboard</button>
+                <h2 class="fw-bold mb-0" id="chartDetailTitle">Chart Detail</h2>
+            </div>
+            <div id="chartExtraActions">
+            </div>
+        </div>
+        <div class="card border-0 shadow-sm rounded-4 p-4 mb-4">
+            <div style="height: 400px; position: relative;">
+                <canvas id="detailedChart"></canvas>
+            </div>
+        </div>
+        <div class="card border-0 shadow-sm rounded-4 p-4">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h5 class="fw-bold mb-0">Data Analytics</h5>
+                <div id="chartDetailAddBtnRow"></div>
+            </div>
+            <div class="row g-3 mb-4">
+                <div class="col-md-6">
+                    <div class="input-group">
+                        <span class="input-group-text bg-white border-end-0"><i class="bi bi-search"></i></span>
+                        <input type="text" class="form-control border-start-0 rounded-end-pill" id="chartSearchInput" placeholder="Search data...">
+                    </div>
+                </div>
+            </div>
+            <div class="table-responsive">
+                <table class="table align-middle">
+                    <thead class="bg-light">
+                        <tr id="chartTableHead"></tr>
+                    </thead>
+                    <tbody id="chartTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. Weather Management -->
+    <div id="admWeather" style="display: none;">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h2 class="fw-bold mb-0" data-t="weather_management">Weather Management</h2>
+                <div class="small text-muted" id="weatherSyncStatus">
+                    <i class="bi bi-clock-history"></i> <span data-t="last_updated_at">Last Updated At</span>: <span id="viewWTimeSync">--</span> | 
+                    <i class="bi bi-person"></i> <span data-t="updated_by">Updated By</span>: <span id="viewWBy">--</span>
+                </div>
+            </div>
+            <div id="weatherControls">
+                <button class="btn btn-primary rounded-pill px-4" id="btnWEdit" onclick="toggleWMode('edit')"><i class="bi bi-pencil-square me-2"></i> <span data-t="edit_weather">Edit All Data</span></button>
+            </div>
+        </div>
+
+        <!-- VIEW MODE -->
+        <div id="weatherViewMode">
+            <div class="card p-4 border-0 shadow-sm rounded-4 mb-4">
+                <h5 class="fw-bold mb-4 text-primary"><i class="bi bi-broadcast me-2"></i>Current Weather State</h5>
+                <div class="row g-4">
+                    <div class="col-md-3">
+                        <div class="p-3 bg-light rounded-3 text-center h-100">
+                            <i class="bi bi-thermometer-half text-danger h2"></i>
+                            <p class="mb-0 text-muted small" data-t="temperature">Temperature</p>
+                            <h3 id="viewWTemp" class="fw-bold">--</h3>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="p-3 bg-light rounded-3 text-center h-100">
+                            <i class="bi bi-droplets-fill text-primary h2"></i>
+                            <p class="mb-0 text-muted small" data-t="humidity_label">Humidity</p>
+                            <h3 id="viewWHumidity" class="fw-bold">--</h3>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="p-3 bg-light rounded-3 text-center h-100">
+                            <i class="bi bi-wind text-info h2"></i>
+                            <p class="mb-0 text-muted small" data-t="wind_speed_label">Wind Speed</p>
+                            <h3 id="viewWWind" class="fw-bold">--</h3>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="p-3 bg-light rounded-3 text-center h-100">
+                            <i class="bi bi-cloud-rain-fill text-primary h2"></i>
+                            <p class="mb-0 text-muted small" data-t="rainfall_label">Rainfall</p>
+                            <h3 id="viewWRain" class="fw-bold">--</h3>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="p-3 bg-light rounded-3 text-center h-100">
+                            <i class="bi bi-speedometer text-warning h2"></i>
+                            <p class="mb-0 text-muted small" data-t="pressure_label">Pressure</p>
+                            <h3 id="viewWPressure" class="fw-bold">--</h3>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="p-3 bg-light rounded-3 text-center h-100">
+                            <i class="bi bi-geo-alt-fill text-success h2"></i>
+                            <p class="mb-0 text-muted small" data-t="location">Location</p>
+                            <h5 id="viewWLoc" class="fw-bold mt-2">--</h5>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="p-3 bg-light rounded-3 text-center h-100">
+                            <i class="bi bi-cloud-sun text-warning h2"></i>
+                            <p class="mb-0 text-muted small" data-t="weather_condition">Condition</p>
+                            <h5 id="viewWStatus" class="fw-bold mt-2">--</h5>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="p-3 bg-light rounded-3 text-center h-100">
+                            <i class="bi bi-calendar-event text-secondary h2"></i>
+                            <p class="mb-1 text-muted small" data-t="last_updated_at">Last Updated</p>
+                            <span id="viewWTime" class="fw-bold small">--</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <h5 class="fw-bold mb-3 mt-4 text-success"><i class="bi bi-graph-up me-2"></i>Graph Data Feeds</h5>
+            <div class="row g-4 mb-4">
+                <div class="col-md-6">
+                    <div class="card p-3 border-0 shadow-sm rounded-4 h-100">
+                        <h6 class="fw-bold text-danger mb-3" data-t="temp_trends_nav">Temperature Trends Data</h6>
+                        <div class="table-responsive">
+                            <table class="table table-sm small">
+                                <thead><tr><th data-t="date_label">Date</th><th data-t="value_label">Value</th></tr></thead>
+                                <tbody id="viewGraphTempBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card p-3 border-0 shadow-sm rounded-4 h-100">
+                        <h6 class="fw-bold text-primary mb-3" data-t="rainfall_data_nav">Rainfall Graph Data</h6>
+                        <div class="table-responsive">
+                            <table class="table table-sm small">
+                                <thead><tr><th data-t="date_label">Date</th><th data-t="value_label">Value</th></tr></thead>
+                                <tbody id="viewGraphRainBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row g-4">
+                <div class="col-md-6">
+                    <div class="card p-4 border-0 shadow-sm rounded-4 h-100">
+                        <h5 class="fw-bold mb-4 text-success" data-t="last_6_months_rain">Last 6 Months Rainfall</h5>
+                        <div class="table-responsive">
+                            <table class="table table-sm align-middle">
+                                <thead class="table-light">
+                                    <tr><th data-t="month_label">Month</th><th data-t="rainfall_mm_label">Rainfall (mm)</th></tr>
+                                </thead>
+                                <tbody id="viewRainfallBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card p-4 border-0 shadow-sm rounded-4 h-100">
+                        <h5 class="fw-bold mb-4 text-info" data-t="next_7_days_forecast">Next 7 Days Forecast</h5>
+                        <div class="table-responsive">
+                            <table class="table table-sm align-middle">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th data-t="date">Date</th>
+                                        <th data-t="temperature">Temp</th>
+                                        <th data-t="weather_condition">Condition</th>
+                                        <th data-t="rain_chance_label">Rain %</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="viewForecastBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card p-4 border-0 shadow-sm rounded-4 mt-4">
+                <h5 class="fw-bold mb-4 text-dark"><i class="bi bi-journal-text me-2"></i>Weather Advisories & Trends</h5>
+                <div class="row g-4">
+                    <div class="col-md-4">
+                        <div class="p-3 bg-light rounded-3 border-start border-4 border-primary h-100">
+                            <h6 class="fw-bold" data-t="agri_advisory">Agri Advisory</h6>
+                            <p class="small text-muted mb-0" id="viewAgriAdvisory">--</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="p-3 bg-light rounded-3 border-start border-4 border-danger h-100">
+                            <h6 class="fw-bold" data-t="crop_alerts_nav">Crop Alerts</h6>
+                            <p class="small text-muted mb-0" id="viewCropAlerts">--</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="p-3 bg-light rounded-3 border-start border-4 border-warning h-100">
+                            <h6 class="fw-bold" data-t="temp_trends_nav">Temperature Trends</h6>
+                            <p class="small text-muted mb-0" id="viewTempTrends">--</p>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="p-3 bg-light rounded-3 border-start border-4 border-info h-100">
+                            <h6 class="fw-bold" data-t="rainfall_data_nav">Rainfall Data Info</h6>
+                            <p class="small text-muted mb-0" id="viewRainfallInfo">--</p>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="p-3 bg-light rounded-3 border-start border-4 border-success h-100">
+                            <h6 class="fw-bold" data-t="seasonal_patterns_nav">Seasonal Patterns</h6>
+                            <p class="small text-muted mb-0" id="viewSeasonalPatterns">--</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- EDIT MODE -->
+        <div id="weatherEditMode" style="display: none;">
+            <form id="admWeatherForm">
+                <div class="card p-4 border-0 shadow-sm rounded-4 mb-4">
+                    <h5 class="fw-bold mb-4">Edit Current Weather</h5>
+                    <div class="row g-3">
+                        <div class="col-md-3"><label class="form-label small fw-bold" data-t="temperature">Temperature (°C)</label><input type="number" step="0.1" id="wTemp" class="form-control" required></div>
+                        <div class="col-md-3"><label class="form-label small fw-bold" data-t="humidity_label">Humidity (%)</label><input type="number" id="wHumidity" class="form-control" required></div>
+                        <div class="col-md-3"><label class="form-label small fw-bold" data-t="wind_speed_label">Wind Speed (km/h)</label><input type="number" step="0.1" id="wWind" class="form-control" required></div>
+                        <div class="col-md-3"><label class="form-label small fw-bold" data-t="rainfall_label">Rainfall (mm)</label><input type="number" step="0.1" id="wRain" class="form-control" required></div>
+                        <div class="col-md-3"><label class="form-label small fw-bold" data-t="pressure_label">Pressure (hPa)</label><input type="number" id="wPressure" class="form-control" required></div>
+                        <div class="col-md-3"><label class="form-label small fw-bold" data-t="location">Location</label><input type="text" id="wLoc" class="form-control" required></div>
+                        <div class="col-md-3"><label class="form-label small fw-bold" data-t="weather_condition">Weather Condition</label><input type="text" id="wStatus" class="form-control" required></div>
+                    </div>
+                </div>
+
+                <div class="row g-4 mb-4">
+                    <div class="col-md-6">
+                        <div class="card p-4 border-0 shadow-sm rounded-4 h-100">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h5 class="fw-bold mb-0">Edit Rainfall History</h5>
+                                <button type="button" class="btn btn-sm btn-outline-success" onclick="addRainfallRow()"><i class="bi bi-plus-lg"></i> Add Month</button>
+                            </div>
+                            <div id="editRainfallList" class="d-flex flex-column gap-2"></div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card p-4 border-0 shadow-sm rounded-4 h-100">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h5 class="fw-bold mb-0">Edit 7 Days Forecast</h5>
+                                <button type="button" class="btn btn-sm btn-outline-info" onclick="addForecastRow()"><i class="bi bi-plus-lg"></i> Add Day</button>
+                            </div>
+                            <div id="editForecastList" class="d-flex flex-column gap-2"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card p-4 border-0 shadow-sm rounded-4 mb-4">
+                    <h5 class="fw-bold mb-4">Edit Advisory Modules</h5>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold" data-t="agri_advisory">Agri Advisory</label>
+                            <textarea id="wAgriAdvisory" class="form-control" rows="3"></textarea>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold" data-t="crop_alerts_nav">Crop Alerts</label>
+                            <textarea id="wCropAlerts" class="form-control" rows="3"></textarea>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold" data-t="temp_trends_nav">Temperature Trends Info</label>
+                            <textarea id="wTempTrends" class="form-control" rows="3"></textarea>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold" data-t="rainfall_data_nav">Rainfall Data Info</label>
+                            <textarea id="wRainfallInfo" class="form-control" rows="3"></textarea>
+                        </div>
+                        <div class="col-md-12">
+                            <label class="form-label small fw-bold" data-t="seasonal_patterns_nav">Seasonal Patterns Info</label>
+                            <textarea id="wSeasonalPatterns" class="form-control" rows="3"></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card p-4 border-0 shadow-sm rounded-4 mb-4">
+                    <h5 class="fw-bold mb-4" data-t="graph_data">Graph Data Control</h5>
+                    <div class="row g-4">
+                        <div class="col-md-6">
+                            <div class="p-3 border rounded-4">
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <h6 class="fw-bold mb-0 text-danger" data-t="temp_trends_nav">Temp Data Points</h6>
+                                    <button type="button" class="btn btn-xs btn-outline-danger" onclick="addGraphDataRow('temp')"><i class="bi bi-plus-lg"></i></button>
+                                </div>
+                                <div id="editGraphTempList" class="graph-data-container"></div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="p-3 border rounded-4">
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <h6 class="fw-bold mb-0 text-primary" data-t="rainfall_data_nav">Rain Data Points</h6>
+                                    <button type="button" class="btn btn-xs btn-outline-primary" onclick="addGraphDataRow('rain')"><i class="bi bi-plus-lg"></i></button>
+                                </div>
+                                <div id="editGraphRainList" class="graph-data-container"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="text-end mb-4">
+                    <button type="button" class="btn btn-light rounded-pill px-4 me-2" onclick="toggleWMode('view')"><span data-t="back_btn">Back</span></button>
+                    <button type="submit" class="btn btn-success rounded-pill px-5 shadow-sm fw-bold"><i class="bi bi-save me-2"></i><span data-t="save_changes">Save All Weather Data</span></button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Change History -->
+        <h4 class="fw-bold mb-3 mt-5" data-t="weather_history">Weather Change History</h4>
+        <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="bg-light">
+                        <tr>
+                            <th class="px-4" data-t="field_name">Field Name</th>
+                            <th data-t="old_value">Old Value</th>
+                            <th data-t="new_value">New Value</th>
+                            <th data-t="updated_by">Updated By</th>
+                            <th class="px-4" data-t="datetime">Date & Time</th>
+                        </tr>
+                    </thead>
+                    <tbody id="weatherHistoryList"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- 3. Market Management -->
+    <div id="admMandi" style="display: none;">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="fw-bold mb-0" data-t="market_management">Market Prices</h2>
+            <button class="btn btn-success rounded-pill px-4" onclick="openMandiModal()"><i class="bi bi-plus-lg me-2"></i> <span data-t="add_price">Add Price</span></button>
+        </div>
+
+        <div class="row g-3 mb-4">
+            <div class="col-md-6">
+                <div class="p-3 bg-white rounded-4 shadow-sm h-100 d-flex align-items-center">
+                    <div class="bg-success bg-opacity-10 p-3 rounded-3 me-3">
+                        <i class="bi bi-box-seam text-success fs-4"></i>
+                    </div>
+                    <div>
+                        <p class="mb-0 text-muted small" data-t="total_crops">Total Crops</p>
+                        <h4 class="fw-bold mb-0" id="totalCropsCountLabel">Total Crops: 0</h4>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="p-3 bg-white rounded-4 shadow-sm h-100 d-flex align-items-center">
+                    <div class="bg-primary bg-opacity-10 p-3 rounded-3 me-3">
+                        <i class="bi bi-activity text-primary fs-4"></i>
+                    </div>
+                    <div>
+                        <p class="mb-0 text-muted small" data-t="status">Status</p>
+                        <h4 class="fw-bold mb-0" id="activeInactiveCountLabel">Active: 0 | Inactive: 0</h4>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="d-flex justify-content-end mb-3">
+            <div class="dropdown">
+                <button class="btn btn-outline-success dropdown-toggle rounded-pill px-4" type="button" data-bs-toggle="dropdown">
+                    <i class="bi bi-download me-2"></i> <span data-t="export_btn">Export</span>
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 rounded-3">
+                    <li><a class="dropdown-item" href="javascript:void(0)" onclick="exportMandi('csv')"><i class="bi bi-filetype-csv me-2"></i> CSV</a></li>
+                    <li><a class="dropdown-item" href="javascript:void(0)" onclick="exportMandi('json')"><i class="bi bi-filetype-json me-2"></i> JSON</a></li>
+                    <li><a class="dropdown-item" href="javascript:void(0)" onclick="exportMandi('xlsx')"><i class="bi bi-file-earmark-excel me-2"></i> Excel (.xlsx)</a></li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="card p-4 border-0 shadow-sm rounded-4">
+            <div class="table-responsive">
+                <table class="table align-middle table-hover">
+                    <thead class="bg-light">
+                        <tr>
+                            <th data-t="name_label" class="px-3">Crop</th>
+                            <th data-t="select_city">Select City</th>
+                            <th data-t="price_per_q">Price (₹/q)</th>
+                            <th data-t="trend">Trend</th>
+                            <th data-t="status">Status</th>
+                            <th data-t="action" class="text-end px-3">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="admMandiList"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- 4. Crops Management -->
+    <div id="crops" style="display: none;">
+        <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
+            <div>
+                <h2 class="mb-1 fw-bold" data-t="manage_crops">Manage Crops</h2>
+                <p class="text-muted small mb-0">Add, edit or update crop information for the database.</p>
+            </div>
+            <button class="btn btn-success px-4 rounded-pill shadow-sm" onclick="openCropModal()">
+                <i class="bi bi-plus-lg me-2"></i> <span data-t="add_crop">Add New Crop</span>
+            </button>
+        </div>
+        <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="bg-light">
+                        <tr class="text-uppercase small fw-bold text-muted">
+                            <th class="ps-4 py-3">S.No.</th>
+                            <th class="py-3" data-t="name_label">Name</th>
+                            <th class="py-3" data-t="suitable_soil">Soil</th>
+                            <th class="py-3" data-t="duration">Duration</th>
+                            <th class="py-3 text-center" data-t="status">Status</th>
+                            <th class="py-3 text-end pe-4" data-t="action">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="adminCropList"></tbody>
+                </table>
+            </div>
+            <div class="card-footer bg-white border-top">
+                <div id="totalCropsCount" class="fw-bold text-primary"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 4.5 Schemes Management -->
+    <div id="admSchemes" style="display: none;">
+        <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
+            <div>
+                <h2 class="mb-1 fw-bold" data-t="schemes_management">Schemes Management</h2>
+                <p class="text-muted small mb-0" data-t="schemes_desc">Add, edit or update agricultural schemes.</p>
+            </div>
+            <button class="btn btn-success px-4 rounded-pill shadow-sm" onclick="openSchemeModal()">
+                <i class="bi bi-plus-lg me-2"></i> <span data-t="add_scheme">Add Scheme</span>
+            </button>
+        </div>
+
+        <div class="card border-0 shadow-sm p-3 mb-4 rounded-4 bg-white">
+            <div class="row g-2">
+                <div class="col-md-4">
+                    <select class="form-select" id="admSchemeStateFilter" onchange="loadAdminSchemes()">
+                        <option value="" data-t="all_states">All States</option>
+                        <option value="Central">Central Govt</option>
+                        <option value="Andhra Pradesh">Andhra Pradesh</option>
+                        <option value="Bihar">Bihar</option>
+                        <option value="Gujarat">Gujarat</option>
+                        <option value="Haryana">Haryana</option>
+                        <option value="Karnataka">Karnataka</option>
+                        <option value="Madhya Pradesh">Madhya Pradesh</option>
+                        <option value="Maharashtra">Maharashtra</option>
+                        <option value="Punjab">Punjab</option>
+                        <option value="Rajasthan">Rajasthan</option>
+                        <option value="Uttar Pradesh">Uttar Pradesh</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <select class="form-select" id="admSchemeTypeFilter" onchange="loadAdminSchemes()">
+                        <option value="" data-t="all_types">All Types</option>
+                        <option value="Govt">Govt</option>
+                        <option value="Semi Govt">Semi Govt</option>
+                        <option value="Private">Private</option>
+                        <option value="NGO">NGO</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <select class="form-select" id="admSchemeCropFilter" onchange="loadAdminSchemes()">
+                        <option value="" data-t="all_crops">All Crops</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="bg-light">
+                        <tr>
+                            <th class="ps-4" data-t="scheme_name">Scheme Name</th>
+                            <th data-t="crop">Crop</th>
+                            <th data-t="schemes_title">State / Type</th>
+                            <th data-t="status">Status</th>
+                            <th class="text-end pe-4" data-t="action">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="adminSchemeList"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- 5. User Management -->
+    <div id="users" style="display: none;">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="fw-bold mb-0" data-t="user_management">User Management</h2>
+            <div class="d-flex gap-2">
+                <div class="dropdown">
+                    <button class="btn btn-outline-success dropdown-toggle rounded-pill px-4" type="button" data-bs-toggle="dropdown">
+                        <i class="bi bi-download me-2"></i> <span data-t="export_btn">Export</span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 rounded-4">
+                        <li><a class="dropdown-item" href="javascript:void(0)" onclick="exportUsers('csv')"><i class="bi bi-filetype-csv me-2 text-primary"></i> CSV</a></li>
+                        <li><a class="dropdown-item" href="javascript:void(0)" onclick="exportUsers('json')"><i class="bi bi-filetype-json me-2 text-warning"></i> JSON</a></li>
+                        <li><a class="dropdown-item" href="javascript:void(0)" onclick="exportUsers('xlsx')"><i class="bi bi-file-earmark-excel me-2 text-success"></i> Excel (.xlsx)</a></li>
+                    </ul>
+                </div>
+                <button class="btn btn-success rounded-pill px-4" onclick="openUserModal()"><i class="bi bi-person-plus me-2"></i> <span data-t="add_new_user">नया उपयोगकर्ता जोड़ें</span></button>
+            </div>
+        </div>
+        
+        <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4">
+            <div class="table-responsive">
+                <table class="table align-middle table-hover mb-0">
+                    <thead class="bg-light text-uppercase small fw-bold">
+                        <tr>
+                            <th class="ps-4" style="width: 80px;">क्रमांक</th>
+                            <th data-t="name">Name</th>
+                            <th data-t="role">Role</th>
+                            <th data-t="status">Status</th>
+                            <th data-t="joined_date">Joined Date</th>
+                            <th data-t="action" class="text-end pe-4">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="userTableList"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- 6. Reset Requests -->
+    <div id="reset" style="display: none;">
+        <h2 class="fw-bold mb-4" data-t="reset_requests">Reset Requests</h2>
+        <div class="card p-4">
+            <div class="table-responsive">
+                <table class="table align-middle">
+                    <thead><tr><th data-t="farmer">Name</th><th data-t="security_question_label">Security Question</th><th data-t="action">Action</th></tr></thead>
+                    <tbody id="resetRequestList"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- 7. Notifications (Merged) -->
+    <div id="admNotifications" style="display: none;">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="fw-bold mb-0" data-t="notifications_nav">Notifications</h2>
+            <div id="notifActions">
+                <button class="btn btn-success rounded-pill px-4" onclick="openNotifModal('notification')"><i class="bi bi-plus-lg me-2"></i> <span data-t="add_notification">Add Notification</span></button>
+            </div>
+        </div>
+        
+        <div class="d-flex gap-2 mb-4 overflow-auto pb-2">
+            <button class="btn btn-outline-success rounded-pill px-4 active" id="filterNotifAll" onclick="filterNotifs('All')">All</button>
+            <button class="btn btn-outline-danger rounded-pill px-4" id="filterNotifAlerts" onclick="filterNotifs('Alerts')">Alerts</button>
+            <button class="btn btn-outline-primary rounded-pill px-4" id="filterNotifGeneral" onclick="filterNotifs('General')">General</button>
+        </div>
+
+        <div class="row g-4" id="admNotifList">
+            <!-- Notifications will appear here -->
+        </div>
+    </div>
+
+    <!-- 7.1 Farmer Queries (Separate Section) -->
+    <div id="admQueries" style="display: none;">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="fw-bold mb-0" data-t="farmer_queries">Farmer Queries</h2>
+        </div>
+
+        <!-- Queries Navigation Tabs -->
+        <ul class="nav nav-pills mb-4 bg-white p-2 rounded-4 shadow-sm" id="queriesTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active rounded-pill px-4 fw-bold" id="farmer-queries-tab" data-bs-toggle="pill" data-bs-target="#farmer-queries" type="button" role="tab" aria-controls="farmer-queries" aria-selected="true"><i class="bi bi-person-badge me-2"></i> Farmer Questions</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link rounded-pill px-4 fw-bold" id="landing-queries-tab" data-bs-toggle="pill" data-bs-target="#landing-queries" type="button" role="tab" aria-controls="landing-queries" aria-selected="false"><i class="bi bi-chat-left-text me-2"></i> <span data-t="landing_queries">Landing Page Queries</span></button>
+            </li>
+        </ul>
+
+        <div class="tab-content" id="queriesTabContent">
+            <!-- Farmer Queries Tab -->
+            <div class="tab-pane fade show active" id="farmer-queries" role="tabpanel" aria-labelledby="farmer-queries-tab">
+                <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+                    <div class="table-responsive">
+                        <table class="table align-middle table-hover mb-0">
+                            <thead class="bg-light">
+                                <tr>
+                                    <th class="ps-4" data-t="farmer">Farmer Name</th>
+                                    <th style="width: 40%;" data-t="question">Question & Answer</th>
+                                    <th data-t="status">Status</th>
+                                    <th data-t="date">Date & Time</th>
+                                    <th class="text-end pe-4" data-t="action">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="farmerQueryList"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Landing Page Queries Tab -->
+            <div class="tab-pane fade" id="landing-queries" role="tabpanel" aria-labelledby="landing-queries-tab">
+                <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+                    <div class="table-responsive">
+                        <table class="table align-middle table-hover mb-0">
+                            <thead class="bg-light">
+                                <tr>
+                                    <th class="ps-4" data-t="messenger_detail">Messenger Detail</th>
+                                    <th style="width: 40%;" data-t="message_reply">Message & Reply</th>
+                                    <th data-t="status">Status</th>
+                                    <th data-t="date">Date & Time</th>
+                                    <th class="text-end pe-4" data-t="action">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="landingPageQueryList"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 8. Profile -->
+    <div id="admProfile" style="display: none;">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="fw-bold mb-0" data-t="profile_nav">Profile</h2>
+        </div>
+        
+        <div class="row g-4">
+            <!-- Edit Profile -->
+            <div class="col-lg-6">
+                <div class="card border-0 shadow-sm rounded-4 h-100">
+                    <div class="card-body p-4">
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <h5 class="fw-bold text-success mb-0"><i class="bi bi-person me-2"></i> <span data-t="admin_profile">Admin Profile</span></h5>
+                            <button type="button" class="btn btn-sm btn-outline-primary rounded-pill px-3 fw-bold" id="admEditBtn" onclick="toggleProfileEdit()" data-t="edit_profile_btn">Edit</button>
+                        </div>
+                        <form id="admProfileForm">
+                            <div class="text-center mb-4">
+                                <img id="admProfileImg" src="https://ui-avatars.com/api/?name=Admin&background=1a531b&color=fff&size=100" class="rounded-circle shadow-sm mb-3 object-fit-cover" width="100" height="100" alt="Admin">
+                                <div id="admProfileImgUploadDiv" style="display:none;">
+                                    <input type="file" id="admProfileImgFile" class="form-control form-control-sm mx-auto" style="max-width: 250px;" accept="image/*">
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label form-label-sm fw-bold" data-t="name">Name</label>
+                                <input type="text" id="admProfileName" class="form-control rounded-3" readonly required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label form-label-sm fw-bold" data-t="email_mobile_label">Email / Mobile</label>
+                                <input type="text" id="admProfileEmail" class="form-control rounded-3" readonly required>
+                            </div>
+                            <div class="mb-4">
+                                <label class="form-label form-label-sm fw-bold" data-t="role">Role</label>
+                                <input type="text" class="form-control rounded-3 bg-light" value="Admin" readonly>
+                            </div>
+                            <button type="submit" id="admSaveBtn" class="btn btn-success rounded-pill px-4 w-100 fw-bold" style="display:none;" data-t="save_profile">Save Profile</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Password & Security -->
+            <div class="col-lg-6">
+                <div class="card border-0 shadow-sm rounded-4 mb-4">
+                    <div class="card-body p-4">
+                        <h5 class="fw-bold text-primary mb-4"><i class="bi bi-shield-lock me-2"></i> <span data-t="security_settings">Security Settings</span></h5>
+                        <div id="admSecuritySummary">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <span class="text-muted fw-bold" data-t="status">Status:</span>
+                                <span id="secStatusBadge" class="badge rounded-pill px-3 py-2 fw-semibold shadow-sm">
+                                    <span class="status-icon"></span> <span class="status-text">--</span>
+                                </span>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center mb-4">
+                                <span class="text-muted fw-bold" data-t="last_updated">Last Updated:</span>
+                                <span id="secLastUpdated" class="fw-semibold text-secondary">--</span>
+                            </div>
+                            <button type="button" class="btn btn-outline-primary rounded-pill w-100 fw-bold pb-2 pt-2" onclick="openSecurityModal()">
+                                <i class="bi bi-pencil-square me-2"></i> <span data-t="edit_security_settings">Edit Security Settings</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card border-0 shadow-sm rounded-4 mb-4">
+                    <div class="card-body p-4">
+                        <h5 class="fw-bold text-danger mb-4"><i class="bi bi-key me-2"></i> <span data-t="change_password">Change Password</span></h5>
+                        <form id="admPassForm">
+                            <div class="mb-3">
+                                <label class="form-label form-label-sm fw-bold" data-t="select_security_q">Select Security Question for Verification</label>
+                                <select id="admCheckSecQ" class="form-select rounded-3 mb-2" required onchange="onPassSecQChange(this)">
+                                    <option value="" disabled selected>Select Question</option>
+                                </select>
+                            </div>
+                            <div class="mb-3" id="admCheckSecADiv" style="display: none;">
+                                <label class="form-label form-label-sm fw-bold" data-t="enter_answer">Enter Answer</label>
+                                <div class="input-group">
+                                    <input type="password" id="checkSecA" class="form-control rounded-start-3">
+                                    <button type="button" class="btn btn-outline-secondary rounded-end-3" onclick="togglePassVisibility('checkSecA', this)"><i class="bi bi-eye"></i></button>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label form-label-sm fw-bold" data-t="new_password">New Password</label>
+                                <div class="input-group">
+                                    <input type="password" id="admNewPass" class="form-control rounded-start-3" required>
+                                    <button type="button" class="btn btn-outline-secondary rounded-end-3" onclick="togglePassVisibility('admNewPass', this)"><i class="bi bi-eye"></i></button>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label form-label-sm fw-bold" data-t="confirm_password">Confirm Password</label>
+                                <div class="input-group">
+                                    <input type="password" id="admNewPassConf" class="form-control rounded-start-3" required>
+                                    <button type="button" class="btn btn-outline-secondary rounded-end-3" onclick="togglePassVisibility('admNewPassConf', this)"><i class="bi bi-eye"></i></button>
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn-danger rounded-pill px-4 w-100 fw-bold" data-t="update_password">Update Password</button>
+                        </form>
+                    </div>
+                </div>
+                
+                <div class="card border-0 shadow-sm rounded-4">
+                    <div class="card-body p-4">
+                        <h5 class="fw-bold text-dark mb-4"><i class="bi bi-clock-history me-2"></i> <span data-t="security_activity_log">Security Activity Log</span></h5>
+                        <div class="table-responsive" style="max-height: 250px; overflow-y: auto;">
+                            <table class="table table-hover align-middle mb-0">
+                                <tbody id="securityActivityLogList">
+                                    <tr><td class="text-center py-4 text-muted">No security activity yet.</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Admin List -->
+            <div class="col-12 mt-4" id="adminListSection">
+                <div class="card border-0 shadow-sm rounded-4">
+                    <div class="card-body p-4">
+                        <h5 class="fw-bold text-dark mb-4"><i class="bi bi-people me-2"></i> <span data-t="admin_management">Admin Management</span></h5>
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th data-t="name">Name</th>
+                                        <th data-t="email_mobile_label">Email / Mobile</th>
+                                        <th data-t="created_date">Created Date</th>
+                                        <th class="text-end" data-t="actions">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="admListBody">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Add Admin -->
+            <div class="col-12 mt-4" id="addAdminSection">
+                <div class="card border-0 shadow-sm rounded-4">
+                    <div class="card-body p-4 bg-success bg-opacity-10 text-dark rounded-4">
+                        <h5 class="fw-bold text-success mb-4"><i class="bi bi-person-plus me-2"></i> <span data-t="add_new_admin">Add New Admin</span></h5>
+                        <form id="addAdminForm" class="row border-0">
+                            <div class="col-md-3 mb-3">
+                                <label class="form-label fw-bold" data-t="name">Name</label>
+                                <input type="text" id="naName" class="form-control rounded-3 bg-white" required>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label class="form-label fw-bold" data-t="email_mobile_label">Email / Mobile</label>
+                                <input type="text" id="naEmail" class="form-control rounded-3 bg-white" required>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label class="form-label fw-bold" data-t="password">Password</label>
+                                <input type="password" id="naPass" class="form-control rounded-3 bg-white" required>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label class="form-label fw-bold" data-t="confirm_password">Confirm Pass</label>
+                                <input type="password" id="naConfirm" class="form-control rounded-3 bg-white" required>
+                            </div>
+                            <div class="col-12 text-end">
+                                <button type="submit" class="btn btn-success rounded-pill px-5 fw-bold" data-t="create_admin">Create Admin</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Audit Logs -->
+            <div class="col-12 mt-4">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h5 class="fw-bold text-dark mb-0"><i class="bi bi-journal-text me-2"></i> <span data-t="audit_logs">Audit Logs</span></h5>
+                    <div class="dropdown">
+                        <button class="btn btn-outline-secondary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-download me-1"></i> <span data-t="download_logs">Download Logs</span>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end shadow">
+                            <li><a class="dropdown-item" href="javascript:void(0)" onclick="downloadAuditLogs('csv')"><i class="bi bi-filetype-csv text-success me-2"></i> CSV Format</a></li>
+                            <li><a class="dropdown-item" href="javascript:void(0)" onclick="downloadAuditLogs('json')"><i class="bi bi-filetype-json text-warning me-2"></i> JSON Format</a></li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="card border-0 shadow-sm rounded-4 mb-3">
+                    <div class="card-body p-3 bg-light rounded-4">
+                        <div class="row g-2 align-items-center">
+                            <div class="col-md-3">
+                                <input type="text" id="logSearch" class="form-control form-control-sm" placeholder="Search logs..." oninput="applyAuditFilters()" data-t="search_logs">
+                            </div>
+                            <div class="col-md-3">
+                                <div class="input-group input-group-sm">
+                                    <select id="logFilterAdmin" class="form-select form-select-sm" onchange="applyAuditFilters()">
+                                        <option value="">All Admins</option>
+                                    </select>
+                                    <button class="btn btn-outline-primary" type="button" title="Add Admin Filter" onclick="addCustomFilter('Admin Name')"><i class="bi bi-plus"></i> <span data-t="add_option">Add</span></button>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="input-group input-group-sm">
+                                    <input type="text" id="logFilterDate" class="form-control form-control-sm" placeholder="Select Date" data-t="select_date">
+                                    <button class="btn btn-outline-secondary" type="button" onclick="clearSpecificFilter('date')" title="Clear Date"><i class="bi bi-x"></i></button>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="input-group input-group-sm">
+                                    <input type="text" id="logFilterTime" class="form-control form-control-sm" placeholder="Select Time" data-t="select_time">
+                                    <button class="btn btn-outline-secondary" type="button" onclick="clearSpecificFilter('time')" title="Clear Time"><i class="bi bi-x"></i></button>
+                                </div>
+                            </div>
+                            <div class="col-md-1">
+                                <button type="button" class="btn btn-sm btn-outline-secondary w-100" title="Clear Filters" onclick="clearAuditFilters()"><i class="bi bi-x-circle"></i></button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card border-0 shadow-sm rounded-4">
+                    <div class="card-body p-0">
+                        <div class="d-flex justify-content-between align-items-center p-3 border-bottom">
+                            <div class="d-flex align-items-center gap-2">
+                                <span class="small text-muted">Show</span>
+                                <select id="logPageSize" class="form-select form-select-sm w-auto" onchange="changeLogPageSize()">
+                                    <option value="10">10</option>
+                                    <option value="20">20</option>
+                                    <option value="50">50</option>
+                                    <option value="100">100</option>
+                                </select>
+                                <span class="small text-muted">entries</span>
+                            </div>
+                            <div class="small text-muted" id="logShowingText">Showing 0-0 of 0 entries</div>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th class="ps-4" data-t="name">Admin Name</th>
+                                        <th data-t="action">Action</th>
+                                        <th data-t="target">Target</th>
+                                        <th>Details (Old &rarr; New)</th>
+                                        <th data-t="date">Date</th>
+                                        <th data-t="time">Time</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="auditLogList">
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="p-3 border-top d-flex justify-content-end" id="logPagination">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    
+<!-- 10. Landing Page Management (Moved inside main-content) -->
+<!-- 10. Landing Page Management -->
+<div id="admLandingPage" style="display: none;">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-bold mb-0">🌐 <span data-t="landing_page_management">Landing Page Management</span></h2>
+        <button id="btnLandingEditMode" class="btn btn-outline-primary" onclick="toggleLandingEditMode()"><i class="bi bi-pencil"></i> Edit Details</button>
+    </div>
+
+    <div class="card border-0 shadow-sm rounded-4 mb-4">
+        <div class="card-body p-4">
+            <h5 class="fw-bold text-dark mb-3">Hero Section</h5>
+            <div class="landing-view-only" id="admHeroView"></div>
+            <div class="landing-edit-only" style="display: none;">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold">Title (English)</label>
+                        <input type="text" class="form-control" id="admHeroTitleEn">
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold">Title (Hindi)</label>
+                        <input type="text" class="form-control" id="admHeroTitleHi">
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold">Subtitle (English)</label>
+                        <textarea class="form-control" id="admHeroSubEn" rows="2"></textarea>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold">Subtitle (Hindi)</label>
+                        <textarea class="form-control" id="admHeroSubHi" rows="2"></textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Keep existing panels, then add Footer -->
+    <div class="card border-0 shadow-sm rounded-4 mb-4">
+        <div class="card-body p-4">
+            <h5 class="fw-bold text-dark mb-3">About Section</h5>
+            <div class="landing-view-only" id="admAboutView"></div>
+            <div class="landing-edit-only" style="display: none;">
+                <div class="mb-3">
+                    <label class="form-label fw-bold">About Text (English)</label>
+                    <textarea class="form-control" id="admAboutEn" rows="3"></textarea>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">About Text (Hindi)</label>
+                    <textarea class="form-control" id="admAboutHi" rows="3"></textarea>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm rounded-4 mb-4">
+        <div class="card-body p-4">
+            <h5 class="fw-bold text-dark mb-4">Features</h5>
+            <div class="row g-3 landing-view-only" id="admFeaturesViewContainer"></div>
+            <div class="landing-edit-only" style="display: none;" id="admFeaturesContainer"></div>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm rounded-4 mb-4">
+        <div class="card-body p-4">
+            <h5 class="fw-bold text-dark mb-4">Useful Links</h5>
+            <ul class="landing-view-only" id="admLinksViewContainer"></ul>
+            <div class="landing-edit-only" style="display: none;" id="admLinksContainer"></div>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm rounded-4 mb-4">
+        <div class="card-body p-4">
+            <h5 class="fw-bold text-dark mb-3">Terms & Conditions</h5>
+            <div class="landing-view-only" id="admTermsView" style="white-space: pre-wrap;"></div>
+            <div class="landing-edit-only" style="display: none;">
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Terms Text (English)</label>
+                    <textarea class="form-control" id="admTermsEn" rows="6"></textarea>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Terms Text (Hindi)</label>
+                    <textarea class="form-control" id="admTermsHi" rows="6"></textarea>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm rounded-4 mb-4">
+        <div class="card-body p-4">
+            <h5 class="fw-bold text-dark mb-3">Privacy Policy</h5>
+            <div class="landing-view-only" id="admPrivacyView" style="white-space: pre-wrap;"></div>
+            <div class="landing-edit-only" style="display: none;">
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Privacy Text (English)</label>
+                    <textarea class="form-control" id="admPrivacyEn" rows="6"></textarea>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Privacy Text (Hindi)</label>
+                    <textarea class="form-control" id="admPrivacyHi" rows="6"></textarea>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm rounded-4 mb-4">
+        <div class="card-body p-4">
+            <h5 class="fw-bold text-dark mb-3">Contact Support Info</h5>
+            <div class="landing-view-only" id="admContactView"></div>
+            <div class="landing-edit-only" style="display: none;">
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Phone Number</label>
+                    <input type="text" class="form-control" id="admContactPhone">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Email Address</label>
+                    <input type="email" class="form-control" id="admContactEmail">
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold">Address (English)</label>
+                        <textarea class="form-control" id="admContactAddrEn" rows="2"></textarea>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold">Address (Hindi)</label>
+                        <textarea class="form-control" id="admContactAddrHi" rows="2"></textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm rounded-4 mb-4">
+        <div class="card-body p-4">
+            <h5 class="fw-bold text-dark mb-3">Footer Management</h5>
+            <div class="landing-view-only" id="admFooterView"></div>
+            <div class="landing-edit-only" style="display: none;">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold">Footer Title/Logo (EN)</label>
+                        <input type="text" class="form-control" id="admFooterTitleEn">
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold">Footer Title/Logo (HI)</label>
+                        <input type="text" class="form-control" id="admFooterTitleHi">
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Footer Description (EN)</label>
+                    <textarea class="form-control" id="admFooterDescEn" rows="2"></textarea>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Footer Description (HI)</label>
+                    <textarea class="form-control" id="admFooterDescHi" rows="2"></textarea>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Copyright text</label>
+                    <input type="text" class="form-control" id="admFooterCopyright">
+                </div>
+                
+                <div class="row mt-4">
+                    <div class="col-md-4">
+                        <h6 class="fw-bold">Navigation Links</h6>
+                        <div id="admNavLinksContainer"></div>
+                        <button type="button" class="btn btn-sm btn-outline-secondary mt-2" onclick="addFooterLink('nav')"><i class="bi bi-plus-circle"></i> Add Nav Link</button>
+                    </div>
+                    <div class="col-md-4">
+                        <h6 class="fw-bold">Support & Legal Links</h6>
+                        <div id="admSupportLinksContainer"></div>
+                        <button type="button" class="btn btn-sm btn-outline-secondary mt-2" onclick="addFooterLink('support')"><i class="bi bi-plus-circle"></i> Add Support Link</button>
+                    </div>
+                    <div class="col-md-4">
+                        <h6 class="fw-bold">Social Links</h6>
+                        <div id="admSocialLinksContainer"></div>
+                        <button type="button" class="btn btn-sm btn-outline-secondary mt-2" onclick="addSocialLink()"><i class="bi bi-plus-circle"></i> Add Social Link</button>
+                    </div>
+                </div>
+
+                <div class="text-end mt-4">
+                    <button class="btn btn-secondary fw-bold px-4 me-2" onclick="toggleLandingEditMode()">Cancel</button>
+                    <button class="btn btn-success fw-bold px-5" onclick="saveLandingData()">Save All Changes</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+</div> <!-- End of main-content -->
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="translations.js"></script>
+
+
+
+    <script src="crops_data.js"></script>
+    <script src="main_admin.js"></script>
+    <script src="password_validator.js"></script>
+</body>
+</html>
+
+</div>
+</div>
+
+    <!-- Mandi Modal -->
+    <div class="modal fade" id="mandiModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content border-0 shadow-lg rounded-4">
+                <div class="modal-header bg-success text-white border-0 py-3">
+                    <h5 class="modal-title fw-bold" id="mandiModalTitle" data-t="add_price">Add Price</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <form id="mandiForm">
+                        <input type="hidden" id="editMandiId">
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold" data-t="name_label">Crop Name</label>
+                            <input type="text" id="mandiCrop" class="form-control rounded-3" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold" data-t="market_name">Market/City</label>
+                            <input type="text" id="mandiMarket" class="form-control rounded-3" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold" data-t="price_per_q">Price per Quintal (₹)</label>
+                            <input type="number" id="mandiPrice" class="form-control rounded-3" required min="0" oninput="if(this.value<0)this.value=Math.abs(this.value)">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold" data-t="datetime">Date</label>
+                            <input type="date" id="mandiDate" class="form-control rounded-3" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold" data-t="status">Status</label>
+                            <select id="mandiStatus" class="form-select rounded-3">
+                                <option value="Active" data-t="active">Active</option>
+                                <option value="Inactive" data-t="inactive">Inactive</option>
+                            </select>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer border-0 p-4">
+                    <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal" data-t="back_btn">Back</button>
+                    <button type="button" class="btn btn-success rounded-pill px-5 fw-bold" onclick="handleMandiSave()" data-t="save_changes">Save Changes</button>
+                </div>
+            </div>
+        </div>
+    </div>
+<div class="modal fade" id="notifModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="notifModalTitle">Add New</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="notifForm">
+                    <input type="hidden" id="notifType">
+                    <input type="hidden" id="notifId">
+                    <div class="mb-3">
+                        <label class="form-label">Title</label>
+                        <input type="text" id="notifItemTitle" class="form-control rounded-3" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Description / Message</label>
+                        <textarea id="notifItemText" class="form-control rounded-3" rows="3" required></textarea>
+                    </div>
+                    <div class="mb-3" id="notifSubTypeDiv">
+                        <label class="form-label" id="notifSubTypeLabel">Type</label>
+                        <select id="notifSeverity" class="form-select rounded-3">
+                            <option value="Info">Info</option>
+                            <option value="Warning">Warning</option>
+                            <option value="Critical">Critical</option>
+                        </select>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Expiry Date</label>
+                            <input type="date" id="notifExpiryDate" class="form-control rounded-3">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Expiry Time</label>
+                            <input type="time" id="notifExpiryTime" class="form-control rounded-3">
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Status</label>
+                        <select id="notifStatus" class="form-select rounded-3">
+                            <option value="Active">Active</option>
+                            <option value="Inactive">Inactive</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-success" onclick="saveNotif()">Save</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Admin Security Modal -->
+<div class="modal fade" id="adminSecurityModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="fw-bold text-primary"><i class="bi bi-shield-lock me-2"></i> Edit Security Settings</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <form id="admSecurityForm">
+                    <h6 class="fw-bold mb-3 text-secondary border-bottom pb-2">Security Question 1</h6>
+                    <div class="mb-3">
+                        <label class="form-label form-label-sm fw-bold">Select Question 1</label>
+                        <select id="admSecQ1" class="form-select rounded-3 mb-2" required>
+                            <option value="" disabled selected>Select Question</option>
+                        </select>
+                        <div class="d-flex gap-2">
+                            <button type="button" class="btn btn-sm btn-outline-success rounded-pill px-3" onclick="addCustomSecQ(1)"><i class="bi bi-plus-circle me-1"></i> Add Custom</button>
+                            <button type="button" class="btn btn-sm btn-outline-danger rounded-pill px-3" onclick="deleteCustomSecQ()"><i class="bi bi-trash me-1"></i> Delete Custom</button>
+                        </div>
+                    </div>
+                    <div class="mb-4">
+                        <label class="form-label form-label-sm fw-bold">Security Answer 1</label>
+                        <div class="input-group">
+                            <input type="password" id="admSecA1" class="form-control rounded-start-3" required>
+                            <button type="button" class="btn btn-outline-secondary rounded-end-3" onclick="togglePassVisibility('admSecA1', this)"><i class="bi bi-eye"></i></button>
+                        </div>
+                    </div>
+
+                    <h6 class="fw-bold mb-3 text-secondary border-bottom pb-2">Security Question 2 (Optional)</h6>
+                    <div class="mb-3">
+                        <label class="form-label form-label-sm fw-bold">Select Question 2</label>
+                        <select id="admSecQ2" class="form-select rounded-3 mb-2">
+                            <option value="">Select Question (Optional)</option>
+                        </select>
+                        <div class="d-flex gap-2">
+                            <button type="button" class="btn btn-sm btn-outline-success rounded-pill px-3" onclick="addCustomSecQ(2)"><i class="bi bi-plus-circle me-1"></i> Add Custom</button>
+                        </div>
+                    </div>
+                    <div class="mb-4">
+                        <label class="form-label form-label-sm fw-bold">Security Answer 2</label>
+                        <div class="input-group">
+                            <input type="password" id="admSecA2" class="form-control rounded-start-3">
+                            <button type="button" class="btn btn-outline-secondary rounded-end-3" onclick="togglePassVisibility('admSecA2', this)"><i class="bi bi-eye"></i></button>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex gap-2 justify-content-end mt-4">
+                        <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary rounded-pill px-4 fw-bold">Save Changes</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Reply Modal -->
+<div class="modal fade" id="replyModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Reply to Farmer</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <textarea id="replyText" class="form-control" rows="5" placeholder="Enter your response here..."></textarea>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-success" id="sendReplyBtn">Send Reply</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- User Modal -->
+<div class="modal fade" id="userModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-header bg-success text-white border-0 py-3">
+                <h5 class="modal-title fw-bold" id="userModalTitle">Add New User</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                <form id="userForm">
+                    <input type="hidden" id="editUserId">
+                    
+                    <div class="row g-3 mb-4">
+                        <div class="col-12">
+                            <h6 class="fw-bold text-success border-bottom pb-2 mb-3"><i class="bi bi-person me-2"></i> Basic Details</h6>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold" data-t="name">Name</label>
+                            <input type="text" id="userInputName" class="form-control rounded-3" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold" data-t="mobile_label">Mobile Number</label>
+                            <input type="number" id="userInputMobile" class="form-control rounded-3" required oninput="if(this.value.length > 10) this.value = this.value.slice(0, 10);">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold" data-t="email_label">Email Address</label>
+                            <input type="email" id="userInputEmail" class="form-control rounded-3" maxlength="50">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold" data-t="role">Role</label>
+                            <select id="userInputRole" class="form-select rounded-3" onchange="toggleFarmFields()">
+                                <option value="farmer">Farmer</option>
+                                <option value="admin">Admin</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold">Age</label>
+                            <input type="number" id="userInputAge" class="form-control rounded-3" min="1" max="100" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold">Gender</label>
+                            <select id="userInputGender" class="form-select rounded-3">
+                                <option value="Male">Male</option>
+                                <option value="Female">Female</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                        <div class="col-md-12">
+                            <label class="form-label small fw-bold" data-t="password">Password</label>
+                            <div class="input-group">
+                                <input type="password" id="userInputPass" class="form-control rounded-start-3" required>
+                                <button type="button" class="btn btn-outline-secondary rounded-end-3" onclick="togglePassVisibility('userInputPass', this)"><i class="bi bi-eye"></i></button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Farm Details Section -->
+                    <div id="farmDetailsSection">
+                        <div class="d-flex justify-content-between align-items-center mb-3 border-bottom pb-2">
+                            <h6 class="fw-bold text-success mb-0"><i class="bi bi-tree me-2"></i> Farm Details</h6>
+                            <button type="button" class="btn btn-sm btn-outline-success rounded-pill px-3" onclick="addFarmRow()">
+                                <i class="bi bi-plus-lg me-1"></i> Add More
+                            </button>
+                        </div>
+                        <div id="farmRowsContainer">
+                            <!-- Farm rows will be added here -->
+                        </div>
+                    </div>
+
+                    <div class="sync-info small text-muted text-center mt-3 border-top pt-3" id="userSyncInfo" style="display: none;">
+                        <i class="bi bi-clock-history"></i> Last Updated: <span id="userLastUpdated"></span> | 
+                        <i class="bi bi-person"></i> By: <span id="userUpdatedBy"></span>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer border-0 p-4">
+                <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-success rounded-pill px-5 fw-bold" onclick="handleUserSave()">Save User</button>
+            </div>
+        </div>
+    </div>
+</div>
+

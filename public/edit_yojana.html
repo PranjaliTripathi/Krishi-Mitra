@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title data-t="schemes_title">Krishi Mitra - Edit Yojana</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        :root { --primary-green: #1a531b; --secondary-green: #2e7d32; }
+        body { background-color: #f0f2f5; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        .sidebar { height: 100vh; background: var(--primary-green); color: white; position: fixed; width: 250px; transition: all 0.3s; z-index: 1000; }
+        .sidebar a { color: #cfdfcf; text-decoration: none; padding: 12px 20px; display: block; transition: 0.2s; border-radius: 8px; margin: 4px 10px; }
+        .sidebar a:hover, .sidebar a.active { background: var(--secondary-green); color: white; }
+        .sidebar .bottom-links { position: absolute; bottom: 20px; width: 100%; }
+        .main-content { margin-left: 250px; padding: 40px; transition: all 0.3s; }
+        .form-card { border: none; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
+        @media (max-width: 768px) {
+            .sidebar { transform: translateX(-100%); }
+            .sidebar.active { transform: translateX(0); }
+            .main-content { margin-left: 0; padding: 20px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="sidebar" id="sidebar">
+    <div class="p-4 text-center">
+        <h3 class="fw-bold"><i class="bi bi-leaf"></i> <span data-t="brand">Krishi Mitra</span></h3>
+        <p class="small text-white-50">Admin Panel</p>
+    </div>
+    <nav>
+        <a href="admin_dashboard.html" class="active"><i class="bi bi-speedometer2 me-2"></i> Dashboard</a>
+        <a href="admin_dashboard.html#schemes"><i class="bi bi-award me-2"></i> Schemes Management</a>
+        <div class="bottom-links">
+            <a href="#" id="logoutBtn" class="text-danger"><i class="bi bi-box-arrow-right me-2"></i> Logout</a>
+        </div>
+    </nav>
+</div>
+
+<div class="main-content">
+    <div class="container-fluid max-width-lg">
+        <div class="d-flex align-items-center mb-4">
+            <a href="admin_dashboard.html" class="btn btn-light rounded-circle me-3 shadow-sm"><i class="bi bi-arrow-left"></i></a>
+            <div>
+                <h2 class="fw-bold mb-0" id="pageTitle" data-t="edit_scheme">Edit Scheme</h2>
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb mb-0">
+                        <li class="breadcrumb-item"><a href="admin_dashboard.html" class="text-success text-decoration-none">Dashboard</a></li>
+                        <li class="breadcrumb-item active" aria-current="page">Yojana Form</li>
+                    </ol>
+                </nav>
+            </div>
+        </div>
+
+        <div class="card form-card">
+            <div class="card-body p-4 p-md-5">
+                <form id="schemeForm">
+                    <input type="hidden" id="schemeId">
+                    <div class="row g-4">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold small text-uppercase tracking-wider text-muted">Scheme Name (Hindi)</label>
+                            <input type="text" id="schNameHi" class="form-control form-control-lg border-2 shadow-sm rounded-3">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold small text-uppercase tracking-wider text-muted">Scheme Name (English)</label>
+                            <input type="text" id="schNameEn" class="form-control form-control-lg border-2 shadow-sm rounded-3">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold small text-uppercase tracking-wider text-muted">Crop Name (Hindi)</label>
+                            <input type="text" id="schCropHi" class="form-control form-control-lg border-2 shadow-sm rounded-3">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold small text-uppercase tracking-wider text-muted">Crop Name (English)</label>
+                            <input type="text" id="schCropEn" class="form-control form-control-lg border-2 shadow-sm rounded-3">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold small text-uppercase tracking-wider text-muted" data-t="state">State</label>
+                            <select id="schState" class="form-select form-select-lg border-2 shadow-sm rounded-3" required>
+                                <option value="Central">Central Govt</option>
+                                <option value="Andhra Pradesh">Andhra Pradesh</option>
+                                <option value="Bihar">Bihar</option>
+                                <option value="Gujarat">Gujarat</option>
+                                <option value="Haryana">Haryana</option>
+                                <option value="Karnataka">Karnataka</option>
+                                <option value="Madhya Pradesh">Madhya Pradesh</option>
+                                <option value="Maharashtra">Maharashtra</option>
+                                <option value="Punjab">Punjab</option>
+                                <option value="Rajasthan">Rajasthan</option>
+                                <option value="Uttar Pradesh">Uttar Pradesh</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold small text-uppercase tracking-wider text-muted" data-t="type">Type</label>
+                            <select id="schType" class="form-select form-select-lg border-2 shadow-sm rounded-3" required>
+                                <option value="Govt">Govt</option>
+                                <option value="Semi Govt">Semi Govt</option>
+                                <option value="Private">Private</option>
+                                <option value="NGO">NGO</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold small text-uppercase tracking-wider text-muted">Short Description (Hindi)</label>
+                            <textarea id="schShortDescHi" class="form-control border-2 shadow-sm rounded-3" rows="3"></textarea>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold small text-uppercase tracking-wider text-muted">Short Description (English)</label>
+                            <textarea id="schShortDescEn" class="form-control border-2 shadow-sm rounded-3" rows="3"></textarea>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold small text-uppercase tracking-wider text-muted">Eligibility (Hindi)</label>
+                            <textarea id="schEligibilityHi" class="form-control border-2 shadow-sm rounded-3" rows="4"></textarea>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold small text-uppercase tracking-wider text-muted">Eligibility (English)</label>
+                            <textarea id="schEligibilityEn" class="form-control border-2 shadow-sm rounded-3" rows="4"></textarea>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold small text-uppercase tracking-wider text-muted">Benefits (Hindi)</label>
+                            <textarea id="schBenefitsHi" class="form-control border-2 shadow-sm rounded-3" rows="4"></textarea>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold small text-uppercase tracking-wider text-muted">Benefits (English)</label>
+                            <textarea id="schBenefitsEn" class="form-control border-2 shadow-sm rounded-3" rows="4"></textarea>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold small text-uppercase tracking-wider text-muted" data-t="subsidy_percent">Subsidy %</label>
+                            <input type="text" id="schSubsidy" class="form-control form-control-lg border-2 shadow-sm rounded-3">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold small text-uppercase tracking-wider text-muted" data-t="area_limit">Area Limit (Acre)</label>
+                            <input type="text" id="schArea" class="form-control form-control-lg border-2 shadow-sm rounded-3">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold small text-uppercase tracking-wider text-muted" data-t="max_usage">Max Usage (Times)</label>
+                            <input type="text" id="schMaxUsage" class="form-control form-control-lg border-2 shadow-sm rounded-3">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold small text-uppercase tracking-wider text-muted" data-t="farmer_cont">Farmer Contribution</label>
+                            <input type="text" id="schFarmerCont" class="form-control form-control-lg border-2 shadow-sm rounded-3">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold small text-uppercase tracking-wider text-muted" data-t="govt_cont">Govt Contribution</label>
+                            <input type="text" id="schGovtCont" class="form-control form-control-lg border-2 shadow-sm rounded-3">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold small text-uppercase tracking-wider text-muted">Application Process (Hindi)</label>
+                            <textarea id="schProcessHi" class="form-control border-2 shadow-sm rounded-3" rows="4"></textarea>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold small text-uppercase tracking-wider text-muted">Application Process (English)</label>
+                            <textarea id="schProcessEn" class="form-control border-2 shadow-sm rounded-3" rows="4"></textarea>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold small text-uppercase tracking-wider text-muted">Required Documents (Hindi)</label>
+                            <textarea id="schDocsHi" class="form-control border-2 shadow-sm rounded-3" rows="3" placeholder="Comma separated values"></textarea>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold small text-uppercase tracking-wider text-muted">Required Documents (English)</label>
+                            <textarea id="schDocsEn" class="form-control border-2 shadow-sm rounded-3" rows="3" placeholder="Comma separated values"></textarea>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold small text-uppercase tracking-wider text-muted">Terms & Conditions (Hindi)</label>
+                            <textarea id="schTermsHi" class="form-control border-2 shadow-sm rounded-3" rows="3"></textarea>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold small text-uppercase tracking-wider text-muted">Terms & Conditions (English)</label>
+                            <textarea id="schTermsEn" class="form-control border-2 shadow-sm rounded-3" rows="3"></textarea>
+                        </div>
+                    </div>
+                    <hr class="my-5 border-light">
+                    <div class="d-flex justify-content-end gap-3">
+                        <a href="admin_dashboard.html" class="btn btn-light btn-lg rounded-pill px-5 border" data-t="cancel">Cancel</a>
+                        <button type="submit" id="saveSchemeBtn" class="btn btn-success btn-lg rounded-pill px-5 shadow-sm" data-t="save_changes">Save Yojana</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="translations.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const lang = localStorage.getItem('krishi_mitra_lang') || 'en';
+        const t = translations[lang];
+
+        // Logout
+        document.getElementById('logoutBtn').addEventListener('click', (e) => {
+            e.preventDefault();
+            Swal.fire({
+                title: lang === 'hi' ? 'क्या आप लॉगआउट करना चाहते हैं?' : 'Are you sure you want to logout?',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: lang === 'hi' ? 'हाँ' : 'Yes',
+                cancelButtonText: lang === 'hi' ? 'नहीं' : 'No'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    localStorage.removeItem('user');
+                    window.location.href = 'admin_login.html';
+                }
+            });
+        });
+        
+        // Translate page
+        document.querySelectorAll('[data-t]').forEach(el => {
+            const key = el.getAttribute('data-t');
+            if (translations[lang] && translations[lang][key]) {
+                el.innerText = translations[lang][key];
+            }
+        });
+
+        // Load data
+        const selectedYojana = JSON.parse(localStorage.getItem('selected_yojana'));
+        if (selectedYojana) {
+            document.getElementById('pageTitle').innerText = t.edit_scheme || 'Edit Scheme';
+            document.getElementById('schemeId').value = selectedYojana.id || '';
+            document.getElementById('schNameHi').value = selectedYojana.name_hi || selectedYojana.name || '';
+            document.getElementById('schNameEn').value = selectedYojana.name_en || selectedYojana.name || '';
+            document.getElementById('schCropHi').value = selectedYojana.cropName_hi || selectedYojana.cropName || '';
+            document.getElementById('schCropEn').value = selectedYojana.cropName_en || selectedYojana.cropName || '';
+            document.getElementById('schState').value = selectedYojana.state || 'Central';
+            document.getElementById('schType').value = selectedYojana.type || 'Govt';
+            document.getElementById('schShortDescHi').value = selectedYojana.shortDesc_hi || selectedYojana.shortDesc || '';
+            document.getElementById('schShortDescEn').value = selectedYojana.shortDesc_en || selectedYojana.shortDesc || '';
+            document.getElementById('schEligibilityHi').value = selectedYojana.eligibility_hi || selectedYojana.eligibility || '';
+            document.getElementById('schEligibilityEn').value = selectedYojana.eligibility_en || selectedYojana.eligibility || '';
+            document.getElementById('schBenefitsHi').value = selectedYojana.benefits_hi || selectedYojana.benefits || '';
+            document.getElementById('schBenefitsEn').value = selectedYojana.benefits_en || selectedYojana.benefits || '';
+            document.getElementById('schSubsidy').value = selectedYojana.subsidyPercent || '';
+            document.getElementById('schArea').value = selectedYojana.areaLimit || '';
+            document.getElementById('schFarmerCont').value = selectedYojana.farmerCont || '';
+            document.getElementById('schGovtCont').value = selectedYojana.govtCont || '';
+            document.getElementById('schMaxUsage').value = selectedYojana.maxUsage || '';
+            document.getElementById('schProcessHi').value = selectedYojana.process_hi || selectedYojana.process || '';
+            document.getElementById('schProcessEn').value = selectedYojana.process_en || selectedYojana.process || '';
+            document.getElementById('schDocsHi').value = selectedYojana.docs_hi || selectedYojana.docs || '';
+            document.getElementById('schDocsEn').value = selectedYojana.docs_en || selectedYojana.docs || '';
+            document.getElementById('schTermsHi').value = selectedYojana.terms_hi || selectedYojana.terms || '';
+            document.getElementById('schTermsEn').value = selectedYojana.terms_en || selectedYojana.terms || '';
+        } else {
+            document.getElementById('pageTitle').innerText = t.add_scheme || 'Add Scheme';
+        }
+
+        const schemeForm = document.getElementById('schemeForm');
+        schemeForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            // Validation: Check all fields (Hindi + English)
+            const fieldsToValidate = [
+                'schNameHi', 'schNameEn', 'schCropHi', 'schCropEn', 
+                'schShortDescHi', 'schShortDescEn', 'schEligibilityHi', 'schEligibilityEn', 
+                'schBenefitsHi', 'schBenefitsEn', 'schProcessHi', 'schProcessEn', 
+                'schDocsHi', 'schDocsEn', 'schTermsHi', 'schTermsEn'
+            ];
+            
+            for (const fieldId of fieldsToValidate) {
+                if (!document.getElementById(fieldId).value.trim()) {
+                    Swal.fire('Error', 'Please fill all fields (both Hindi and English).', 'error');
+                    return;
+                }
+            }
+
+            Swal.fire({
+                title: lang === 'hi' ? 'क्या आप यह बदलाव सुरक्षित करना चाहते हैं?' : 'Do you want to save this change?',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#1a531b',
+                confirmButtonText: lang === 'hi' ? 'हाँ' : 'Yes',
+                cancelButtonText: lang === 'hi' ? 'रद्द करें' : 'Cancel'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    let schemes = [];
+                    try { 
+                        schemes = JSON.parse(localStorage.getItem('yojana_data')) || JSON.parse(localStorage.getItem('schemes_data')) || []; 
+                    } catch(err) {}
+
+                    const id = document.getElementById('schemeId').value;
+                    const newScheme = {
+                        id: id ? parseInt(id) : Date.now(),
+                        name_hi: document.getElementById('schNameHi').value,
+                        name_en: document.getElementById('schNameEn').value,
+                        cropName_hi: document.getElementById('schCropHi').value,
+                        cropName_en: document.getElementById('schCropEn').value,
+                        state: document.getElementById('schState').value,
+                        type: document.getElementById('schType').value,
+                        shortDesc_hi: document.getElementById('schShortDescHi').value,
+                        shortDesc_en: document.getElementById('schShortDescEn').value,
+                        eligibility_hi: document.getElementById('schEligibilityHi').value,
+                        eligibility_en: document.getElementById('schEligibilityEn').value,
+                        benefits_hi: document.getElementById('schBenefitsHi').value,
+                        benefits_en: document.getElementById('schBenefitsEn').value,
+                        subsidyPercent: document.getElementById('schSubsidy').value,
+                        areaLimit: document.getElementById('schArea').value,
+                        farmerCont: document.getElementById('schFarmerCont').value,
+                        govtCont: document.getElementById('schGovtCont').value,
+                        maxUsage: document.getElementById('schMaxUsage').value,
+                        process_hi: document.getElementById('schProcessHi').value,
+                        process_en: document.getElementById('schProcessEn').value,
+                        docs_hi: document.getElementById('schDocsHi').value,
+                        docs_en: document.getElementById('schDocsEn').value,
+                        terms_hi: document.getElementById('schTermsHi').value,
+                        terms_en: document.getElementById('schTermsEn').value,
+                        status: selectedYojana ? selectedYojana.status : 'Active'
+                    };
+
+                    const idx = schemes.findIndex(s => s.id == id);
+                    if (idx !== -1) {
+                        schemes[idx] = newScheme;
+                    } else {
+                        schemes.push(newScheme);
+                    }
+
+                    localStorage.setItem('schemes_data', JSON.stringify(schemes));
+                    localStorage.setItem('yojana_data', JSON.stringify(schemes));
+                    localStorage.removeItem('selected_yojana');
+
+                    Swal.fire('Saved!', 'Yojana has been saved successfully.', 'success').then(() => {
+                        window.location.href = 'admin_dashboard.html';
+                    });
+                }
+            });
+        });
+    });
+</script>
+
+</body>
+</html>

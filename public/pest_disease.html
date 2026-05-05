@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title data-t="pest_disease_title">Krishi Mitra - Pest & Disease</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        :root { --primary-green: #1a531b; --secondary-green: #2e7d32; }
+        body { background-color: #f0f2f5; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        .sidebar { height: 100vh; background: var(--primary-green); color: white; position: fixed; width: 250px; transition: all 0.3s; z-index: 1000; }
+        .sidebar a { color: #cfdfcf; text-decoration: none; padding: 12px 20px; display: block; transition: 0.2s; border-radius: 8px; margin: 4px 10px; }
+        .sidebar a:hover, .sidebar a.active { background: var(--secondary-green); color: white; }
+        .sidebar .bottom-links { position: absolute; bottom: 20px; width: 100%; }
+        .main-content { margin-left: 250px; padding: 20px; transition: all 0.3s; }
+        .mobile-nav { display: none; background: var(--primary-green); color: white; padding: 10px 20px; position: sticky; top: 0; z-index: 1001; }
+        .pest-card { border: none; border-radius: 15px; overflow: hidden; transition: 0.2s; }
+        .pest-card:hover { transform: translateY(-5px); }
+        .pest-img { height: 180px; object-fit: cover; }
+        @media (max-width: 768px) {
+            .sidebar { transform: translateX(-100%); width: 250px; }
+            .sidebar.active { transform: translateX(0); }
+            .main-content { margin-left: 0; }
+            .mobile-nav { display: flex; justify-content: space-between; align-items: center; }
+            .overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 999; }
+            .overlay.active { display: block; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="overlay" id="overlay"></div>
+
+<div class="mobile-nav">
+    <h4 class="mb-0"><i class="bi bi-leaf"></i> Krishi Mitra</h4>
+    <button class="btn text-white fs-3 p-0" id="menuToggle"><i class="bi bi-list"></i></button>
+</div>
+
+<div class="sidebar" id="sidebar">
+    <div class="p-4 text-center">
+        <h3 class="fw-bold"><i class="bi bi-leaf"></i> <span data-t="brand">Krishi Mitra</span></h3>
+    </div>
+    <nav>
+        <a href="farmer_dashboard.html"><i class="bi bi-speedometer2 me-2"></i> <span data-t="dashboard">Dashboard</span></a>
+        <a href="weather.html"><i class="bi bi-cloud-sun me-2"></i> <span data-t="weather_nav">Weather</span></a>
+        <a href="my_crops.html"><i class="bi bi-tree me-2"></i> <span data-t="my_crops_nav">My Crops</span></a>
+        <a href="all_crops_info.html"><i class="bi bi-journal-text me-2"></i> <span data-t="all_crops_info_nav">All Crops Info</span></a>
+        <a href="market_prices.html"><i class="bi bi-graph-up-arrow me-2"></i> <span data-t="market_prices_nav">Market Price</span></a>
+        <a href="notifications.html"><i class="bi bi-bell me-2"></i> <span data-t="notifications_nav">Notifications</span></a>
+        <a href="queries.html"><i class="bi bi-question-circle me-2"></i> <span data-t="my_queries">My Questions</span></a>
+        
+        <div class="bottom-links">
+            <a href="profile.html"><i class="bi bi-person-circle me-2"></i> <span data-t="profile_nav">Profile</span></a>
+            <a href="#" id="logoutBtn" class="text-danger"><i class="bi bi-box-arrow-right me-2"></i> <span data-t="logout">Logout</span></a>
+        </div>
+    </nav>
+</div>
+
+<div class="main-content">
+    <div class="container">
+        <h2 class="mb-4 fw-bold" data-t="pest_disease_title">Pest & Disease Management</h2>
+
+        <div class="row g-4" id="pestGrid">
+            <!-- Pests will be loaded here -->
+        </div>
+    </div>
+</div>
+
+<script src="translations.js"></script>
+<script>
+    // Sidebar Toggle
+    const menuToggle = document.getElementById('menuToggle');
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('overlay');
+
+    menuToggle.addEventListener('click', () => {
+        sidebar.classList.add('active');
+        overlay.classList.add('active');
+    });
+
+    overlay.addEventListener('click', () => {
+        sidebar.classList.remove('active');
+        overlay.classList.remove('active');
+    });
+
+    function loadPests() {
+        const lang = localStorage.getItem('krishi_mitra_lang') || 'en';
+        const t = translations[lang];
+        const pests = [
+            { 
+                name: lang === 'en' ? 'Yellow Rust' : 'पीला रतुआ', 
+                crop: lang === 'en' ? 'Wheat' : 'गेंहू', 
+                symptoms: lang === 'en' ? 'Yellow powdery stripes on leaves.' : 'पत्तियों पर पीले रंग की पाउडर वाली धारियां।', 
+                solution: lang === 'en' ? 'Spray Propiconazole 25 EC.' : 'प्रोपिकोनाज़ोल 25 ईसी का छिड़काव करें।' 
+            },
+            { 
+                name: lang === 'en' ? 'Aphids' : 'एफिड्स', 
+                crop: lang === 'en' ? 'Various' : 'विभिन्न', 
+                symptoms: lang === 'en' ? 'Small green insects sucking sap.' : 'छोटे हरे कीट रस चूस रहे हैं।', 
+                solution: lang === 'en' ? 'Use Neem oil spray or Imidacloprid.' : 'नीम के तेल के स्प्रे या इमिडाक्लोप्रिड का प्रयोग करें।' 
+            },
+            { 
+                name: lang === 'en' ? 'Blast Disease' : 'ब्लास्ट रोग', 
+                crop: lang === 'en' ? 'Rice' : 'चावल', 
+                symptoms: lang === 'en' ? 'Diamond shaped spots on leaves.' : 'पत्तियों पर हीरे के आकार के धब्बे।', 
+                solution: lang === 'en' ? 'Apply Tricyclazole 75 WP.' : 'ट्राइसाइक्लाज़ोल 75 डब्ल्यूपी लगाएं।' 
+            },
+            { 
+                name: lang === 'en' ? 'Bollworm' : 'बॉलवर्म', 
+                crop: lang === 'en' ? 'Cotton' : 'कपास', 
+                symptoms: lang === 'en' ? 'Holes in bolls and squares.' : 'बॉल और चौकोर में छिद्र।', 
+                solution: lang === 'en' ? 'Use pheromone traps or Spinosad.' : 'फेरोमोन ट्रैप या स्पिनोसैड का उपयोग करें।' 
+            }
+        ];
+
+        const grid = document.getElementById('pestGrid');
+        grid.innerHTML = pests.map(p => `
+            <div class="col-md-6 col-lg-4">
+                <div class="card pest-card shadow-sm h-100">
+                    <img src="https://picsum.photos/seed/${p.name}/400/200" class="pest-img" alt="${p.name}">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <h5 class="fw-bold mb-0">${p.name}</h5>
+                            <span class="badge bg-success bg-opacity-10 text-success">${p.crop}</span>
+                        </div>
+                        <p class="small text-muted mb-3"><strong data-t="symptoms">${t.symptoms}:</strong> ${p.symptoms}</p>
+                        <div class="p-2 bg-light rounded-3">
+                            <small class="fw-bold text-success d-block mb-1" data-t="treatment">${t.treatment}:</small>
+                            <small class="text-muted">${p.solution}</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    // Logout with Confirmation
+    document.getElementById('logoutBtn').addEventListener('click', () => {
+        const lang = localStorage.getItem('krishi_mitra_lang') || 'en';
+        const t = translations[lang];
+        if (typeof Swal === 'undefined') {
+             localStorage.removeItem('user');
+             window.location.href = 'index.html#top';
+             return;
+        }
+        Swal.fire({
+            title: t.logout_confirm_title,
+            text: t.logout_confirm,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#28a745',
+            cancelButtonColor: '#d33',
+            confirmButtonText: t.logout
+        }).then((result) => {
+            if (result.isConfirmed) {
+                localStorage.removeItem('user');
+                window.location.href = 'index.html#top';
+            }
+        });
+    });
+
+    loadPests();
+    applyTranslations();
+</script>
+</body>
+</html>

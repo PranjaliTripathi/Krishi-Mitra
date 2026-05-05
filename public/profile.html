@@ -1,0 +1,788 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title data-t="profile_nav">Krishi Mitra - Profile</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        :root { --primary-green: #1a531b; --secondary-green: #2e7d32; --light-bg: #f0f2f5; }
+        body { background-color: var(--light-bg); font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        
+        .sidebar { height: 100vh; background: var(--primary-green); color: white; position: fixed; width: 250px; transition: all 0.3s; z-index: 1000; }
+        .sidebar a { color: #cfdfcf; text-decoration: none; padding: 12px 20px; display: block; transition: 0.2s; border-radius: 8px; margin: 4px 10px; }
+        .sidebar a:hover, .sidebar a.active { background: var(--secondary-green); color: white; }
+        .sidebar .bottom-links { position: absolute; bottom: 20px; width: 100%; }
+        
+        .main-content { margin-left: 250px; padding: 40px 20px; transition: all 0.3s; }
+        
+        .mobile-nav { display: none; background: var(--primary-green); color: white; padding: 10px 20px; position: sticky; top: 0; z-index: 1001; }
+        
+        .section-card { background: white; border-radius: 20px; border: none; box-shadow: 0 5px 20px rgba(0,0,0,0.05); margin-bottom: 30px; overflow: hidden; }
+        .section-header { background: #f8fafc; padding: 20px 25px; border-bottom: 1px solid #edf2f7; display: flex; align-items: center; gap: 12px; }
+        .section-header i { font-size: 1.4rem; color: var(--secondary-green); }
+        .section-header h5 { margin: 0; font-weight: 700; color: #1e293b; }
+        .section-body { padding: 30px; }
+
+        .profile-img-container { position: relative; width: 140px; height: 140px; margin: 0 auto 25px; }
+        .profile-img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; border: 5px solid white; box-shadow: 0 8px 25px rgba(0,0,0,0.15); }
+        .edit-img-btn { position: absolute; bottom: 5px; right: 5px; background: var(--secondary-green); color: white; border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; cursor: pointer; border: 3px solid white; transition: 0.3s; }
+        .edit-img-btn:hover { background: var(--primary-green); transform: scale(1.1); }
+
+        .form-label { font-weight: 600; color: #64748b; margin-bottom: 8px; }
+        .form-control, .form-select { border-radius: 10px; border: 1px solid #e2e8f0; padding: 12px 15px; transition: 0.3s; }
+        .form-control:focus, .form-select:focus { border-color: var(--secondary-green); box-shadow: 0 0 0 4px rgba(46, 125, 50, 0.1); }
+
+        .view-mode .form-control, .view-mode .form-select, .view-mode .btn-save, .view-mode .btn-action-ui { display: none; }
+        .edit-mode .static-value, .edit-mode .btn-edit-trigger { display: none; }
+        
+        .static-value { padding: 12px 15px; background: #f1f5f9; border-radius: 10px; color: #334155; font-weight: 500; min-height: 48px; border: 1px solid transparent; }
+
+        /* Completion Indicator */
+        .completion-container { background: white; padding: 25px; border-radius: 20px; margin-bottom: 30px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        .progress { height: 12px; border-radius: 20px; background: #e2e8f0; margin-top: 15px; }
+        .progress-bar { background: linear-gradient(90deg, #34d399, #10b981); border-radius: 20px; transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1); }
+
+        .sticky-actions { position: sticky; bottom: 20px; z-index: 900; background: white; padding: 15px 30px; border-radius: 50px; box-shadow: 0 10px 40px rgba(0,0,0,0.1); display: flex; justify-content: center; gap: 15px; width: fit-content; margin: 40px auto 0; border: 1px solid #e2e8f0; }
+
+        .field-row { background: #f8fafc; border-radius: 15px; padding: 20px; margin-bottom: 15px; border: 1px solid #edf2f7; position: relative; }
+        .remove-field { position: absolute; top: 10px; right: 10px; color: #ef4444; cursor: pointer; }
+
+        .pass-group { position: relative; }
+        .pass-toggle { position: absolute; right: 15px; top: 42px; cursor: pointer; color: #64748b; z-index: 10; }
+
+        .sync-info { font-size: 0.85rem; color: #94a3b8; text-align: center; margin-top: 15px; }
+
+        @media (max-width: 768px) {
+            .sidebar { transform: translateX(-100%); width: 250px; }
+            .sidebar.active { transform: translateX(0); }
+            .main-content { margin-left: 0; padding-top: 20px; }
+            .mobile-nav { display: flex; justify-content: space-between; align-items: center; }
+            .overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 999; }
+            .overlay.active { display: block; }
+            .section-body { padding: 20px; }
+            .col-md-6 { margin-bottom: 15px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="overlay" id="overlay"></div>
+
+<div class="mobile-nav">
+    <h4 class="mb-0"><i class="bi bi-leaf"></i> Krishi Mitra</h4>
+    <button class="btn text-white fs-3 p-0" id="menuToggle"><i class="bi bi-list"></i></button>
+</div>
+
+<div class="sidebar" id="sidebar">
+    <div class="p-4 text-center">
+        <h3 class="fw-bold"><i class="bi bi-leaf"></i> <span data-t="brand">Krishi Mitra</span></h3>
+    </div>
+    <nav>
+        <a href="farmer_dashboard.html"><i class="bi bi-speedometer2 me-2"></i> <span data-t="dashboard">Dashboard</span></a>
+        <a href="weather.html"><i class="bi bi-cloud-sun me-2"></i> <span data-t="weather_nav">Weather</span></a>
+        <a href="my_crops.html"><i class="bi bi-tree me-2"></i> <span data-t="my_crops_nav">My Crops</span></a>
+        <a href="all_crops_info.html"><i class="bi bi-journal-text me-2"></i> <span data-t="all_crops_info_nav">Smart Crop Information</span></a>
+        <a href="schemes.html"><i class="bi bi-award me-2"></i> <span data-t="schemes_nav">Schemes</span></a>
+        <a href="market_prices.html"><i class="bi bi-graph-up-arrow me-2"></i> <span data-t="market_prices_nav">Market Price</span></a>
+        <a href="notifications.html"><i class="bi bi-bell me-2"></i> <span data-t="notifications_nav">Notifications</span></a>
+        <a href="queries.html"><i class="bi bi-question-circle me-2"></i> <span data-t="my_queries">My Questions</span></a>
+        
+        <div class="bottom-links">
+            <a href="profile.html" class="active"><i class="bi bi-person-circle me-2"></i> <span data-t="profile_nav">Profile</span></a>
+            <a href="#" id="logoutBtn" class="text-danger"><i class="bi bi-box-arrow-right me-2"></i> <span data-t="logout">Logout</span></a>
+        </div>
+    </nav>
+</div>
+
+<div class="main-content">
+    <div class="container-fluid" style="max-width: 900px;">
+        
+        <!-- Profile Completion -->
+        <div class="completion-container">
+            <div class="d-flex justify-content-between align-items-center mb-1">
+                <h6 class="fw-bold text-muted mb-0" data-t="profile_completion_label">Profile Completion</h6>
+                <span class="badge bg-success rounded-pill" id="percentText">0%</span>
+            </div>
+            <div class="progress">
+                <div class="progress-bar" id="progressBar" role="progressbar" style="width: 0%"></div>
+            </div>
+        </div>
+
+        <form id="profileForm" class="view-mode">
+            
+            <!-- Section 1: Basic Info -->
+            <div class="section-card">
+                <div class="section-header">
+                    <i class="bi bi-person-badge"></i>
+                    <h5 data-t="basic_info_sec">Basic Information</h5>
+                </div>
+                <div class="section-body">
+                    <div class="profile-img-container">
+                        <img src="https://picsum.photos/seed/farmer/200" alt="Profile" class="profile-img" id="profileImg">
+                        <label for="imgUpload" class="edit-img-btn" id="imgUploadLabel" style="display: none;">
+                            <i class="bi bi-camera"></i>
+                            <input type="file" id="imgUpload" hidden accept="image/*">
+                        </label>
+                    </div>
+
+                    <div class="row g-4">
+                        <div class="col-md-12">
+                            <label class="form-label" data-t="name_label">Name</label>
+                            <div class="static-value" id="view_name"></div>
+                            <input type="text" class="form-control" id="edit_name" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" data-t="mobile_label">Mobile Number</label>
+                            <div class="static-value" id="view_mobile"></div>
+                            <input type="number" class="form-control" id="edit_mobile" required oninput="if(this.value.length > 10) this.value = this.value.slice(0, 10);">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" data-t="email_label">Email Address</label>
+                            <div class="static-value" id="view_email"></div>
+                            <input type="email" class="form-control" id="edit_email" maxlength="50">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" data-t="age_label">Age</label>
+                            <div class="static-value" id="view_age"></div>
+                            <input type="number" class="form-control" id="edit_age" min="1" max="100" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" data-t="gender_label">Gender</label>
+                            <div class="static-value" id="view_gender"></div>
+                            <select class="form-select" id="edit_gender">
+                                <option value="" data-t="select_option">Select</option>
+                                <option value="Male" data-t="male">Male</option>
+                                <option value="Female" data-t="female">Female</option>
+                                <option value="Other" data-t="other">Other</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section 2: Location -->
+            <div class="section-card">
+                <div class="section-header">
+                    <i class="bi bi-geo-alt"></i>
+                    <h5 data-t="location_sec">Location Details</h5>
+                </div>
+                <div class="section-body">
+                    <div class="row g-4">
+                        <div class="col-md-6">
+                            <label class="form-label" data-t="state_label">State</label>
+                            <div class="static-value" id="view_state"></div>
+                            <input type="text" class="form-control" id="edit_state">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" data-t="district_label">District</label>
+                            <div class="static-value" id="view_district"></div>
+                            <input type="text" class="form-control" id="edit_district">
+                        </div>
+                        <div class="col-md-12">
+                            <label class="form-label" data-t="pincode_label">Pincode</label>
+                            <div class="static-value" id="view_pincode"></div>
+                            <input type="number" class="form-control" id="edit_pincode" oninput="if(this.value.length > 10) this.value = this.value.slice(0, 10);">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section 3: Farm Details (DYNAMIC) -->
+            <div class="section-card">
+                <div class="section-header d-flex justify-content-between align-items-center">
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="bi bi-flower1"></i>
+                        <h5 data-t="farm_details_sec">Farm Details</h5>
+                    </div>
+                    <button type="button" class="btn btn-sm btn-outline-success btn-action-ui" id="addFieldBtn">
+                        <i class="bi bi-plus-circle"></i> <span data-t="add_field_btn">Add Field</span>
+                    </button>
+                </div>
+                <div class="section-body" id="farmFieldsContainer">
+                    <!-- Fields will be injected here -->
+                </div>
+            </div>
+
+            <!-- Section 4: Market Info -->
+            <div class="section-card">
+                <div class="section-header">
+                    <i class="bi bi-cart4"></i>
+                    <h5 data-t="market_info_sec">Market Information</h5>
+                </div>
+                <div class="section-body">
+                    <div class="row g-4">
+                        <div class="col-md-6">
+                            <label class="form-label" data-t="nearest_market_label">Nearest Market</label>
+                            <div class="static-value" id="view_market"></div>
+                            <input type="text" class="form-control" id="edit_market">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" data-t="selling_type_label">Selling Type</label>
+                            <div class="static-value" id="view_selling_type"></div>
+                            <select class="form-select" id="edit_selling_type">
+                                <option value="" data-t="select_option">Select</option>
+                                <option value="Direct" data-t="selling_direct">Direct to Consumer</option>
+                                <option value="Trader" data-t="selling_trader">Local Trader</option>
+                                <option value="Mandi" data-t="selling_mandi">Mandi (APMC)</option>
+                            </select>
+                        </div>
+                        <div class="col-md-12">
+                            <label class="form-label" data-t="avg_yield_label">Average Annual Yield (Quintal)</label>
+                            <div class="static-value" id="view_yield"></div>
+                            <input type="number" class="form-control" id="edit_yield" min="0">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section 5: Risk & Issues -->
+            <div class="section-card">
+                <div class="section-header">
+                    <i class="bi bi-exclamation-triangle"></i>
+                    <h5 data-t="risk_issues_sec">Risks & Issues</h5>
+                </div>
+                <div class="section-body">
+                    <div class="row g-4">
+                        <div class="col-md-6">
+                            <label class="form-label" data-t="common_problems_label">Common Problems</label>
+                            <div class="static-value" id="view_problems"></div>
+                            <select class="form-select" id="edit_problems">
+                                <option value="" data-t="select_option">Select</option>
+                                <option value="Pest" data-t="problem_pest">Pest Attacks</option>
+                                <option value="Disease" data-t="problem_disease">Crop Diseases</option>
+                                <option value="Water" data-t="problem_water">Water Scarcity</option>
+                                <option value="None" data-t="no_major_issues">None</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" data-t="risk_level">Risk Level</label>
+                            <div class="static-value" id="view_risk"></div>
+                            <select class="form-select" id="edit_risk">
+                                <option value="" data-t="select_option">Select</option>
+                                <option value="Low" data-t="low">Low</option>
+                                <option value="Medium" data-t="medium">Medium</option>
+                                <option value="High" data-t="high">High</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section 6: Security -->
+            <div class="section-card">
+                <div class="section-header">
+                    <i class="bi bi-shield-lock"></i>
+                    <h5 data-t="security_sec">Security Settings</h5>
+                </div>
+                <div class="section-body">
+                    <div class="row g-4">
+                        <div class="col-md-12 border-bottom pb-3 mb-2">
+                             <div class="alert alert-light border small text-muted">
+                                <i class="bi bi-info-circle me-1"></i> <span data-t="reset_password_logic">You can reset your password using any one answer.</span>
+                             </div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" data-t="security_q1_label">Question 1</label>
+                            <div class="static-value" id="view_q1"></div>
+                            <select class="form-select" id="edit_q1">
+                                <option value="" data-t="select_question">Select Question</option>
+                                <option value="What is your pet's name?" data-t="security_q1">What is your pet's name?</option>
+                                <option value="What is your birth city?" data-t="security_q2">What is your birth city?</option>
+                                <option value="What is your favorite crop?" data-t="security_q3">What is your favorite crop?</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 pass-group">
+                            <label class="form-label" data-t="security_a1_label">Answer 1</label>
+                            <div class="static-value">******</div>
+                            <input type="password" class="form-control" id="edit_a1">
+                            <i class="bi bi-eye pass-toggle btn-action-ui" onclick="togglePass('edit_a1')"></i>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" data-t="security_q2_label">Question 2</label>
+                            <div class="static-value" id="view_q2"></div>
+                            <select class="form-select" id="edit_q2">
+                                <option value="" data-t="select_question">Select Question</option>
+                                <option value="What is your pet's name?" data-t="security_q1">What is your pet's name?</option>
+                                <option value="What is your birth city?" data-t="security_q2">What is your birth city?</option>
+                                <option value="What is your favorite crop?" data-t="security_q3">What is your favorite crop?</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 pass-group">
+                            <label class="form-label" data-t="security_a2_label">Answer 2</label>
+                            <div class="static-value">******</div>
+                            <input type="password" class="form-control" id="edit_a2">
+                            <i class="bi bi-eye pass-toggle btn-action-ui" onclick="togglePass('edit_a2')"></i>
+                        </div>
+                        <div class="col-md-12">
+                            <button type="button" class="btn btn-outline-primary w-100 mt-2" id="togglePassFormBtn">
+                                <i class="bi bi-key"></i> <span data-t="change_password_btn">Change Password</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Inline Change Password Form -->
+                    <div id="changePassForm" class="mt-4 p-3 border rounded bg-light" style="display: none;">
+                        <h6 class="fw-bold mb-3 border-bottom pb-2">Change Account Password</h6>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Verify via Security Question</label>
+                                <select class="form-select" id="pass_verify_q">
+                                    <option value="q1">Question 1</option>
+                                    <option value="q2">Question 2</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Security Answer</label>
+                                <input type="text" class="form-control" id="pass_verify_a" placeholder="Your Answer">
+                            </div>
+                            <div class="col-md-6 pass-group">
+                                <label class="form-label" data-t="new_password_label">New Password</label>
+                                <input type="password" class="form-control" id="new_pass">
+                                <i class="bi bi-eye pass-toggle" onclick="togglePass('new_pass')"></i>
+                            </div>
+                            <div class="col-md-6 pass-group">
+                                <label class="form-label" data-t="confirm_new_password_label">Confirm New Password</label>
+                                <input type="password" class="form-control" id="confirm_new_pass">
+                                <i class="bi bi-eye pass-toggle" onclick="togglePass('confirm_new_pass')"></i>
+                            </div>
+                            <div class="col-md-12 text-end">
+                                <button type="button" class="btn btn-secondary btn-sm me-2" onclick="togglePassForm(false)" data-t="cancel">Cancel</button>
+                                <button type="button" class="btn btn-primary btn-sm" id="submitPassChange">Update Password</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="sync-info">
+                <span data-t="last_updated">Last Updated</span>: <span id="last_updated_val"></span> | 
+                <span data-t="updated_by">Updated By</span>: <span id="updated_by_val"></span>
+            </div>
+
+            <div class="sticky-actions">
+                <button type="button" class="btn btn-outline-secondary btn-edit-trigger px-4" id="cancelEdit" style="display: none;" data-t="cancel">Cancel</button>
+                <button type="button" class="btn btn-primary btn-edit-trigger px-5 fw-bold" id="editBtn" data-t="edit_profile">Edit Profile</button>
+                <button type="submit" class="btn btn-success btn-save px-5 fw-bold" style="display: none;" data-t="save_changes">Save Changes</button>
+            </div>
+
+        </form>
+    </div>
+</div>
+
+<script src="translations.js"></script>
+<script src="password_validator.js"></script>
+<script>
+    const user = JSON.parse(localStorage.getItem('user'));
+    if (!user || user.role !== 'farmer') window.location.href = 'login.html';
+
+    const translations_ref = translations;
+
+    // Sidebar & Mobile Toggle
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('overlay');
+    const menuToggle = document.getElementById('menuToggle');
+
+    if (menuToggle) {
+        menuToggle.onclick = () => {
+            sidebar.classList.toggle('active');
+            overlay.classList.toggle('active');
+        };
+    }
+    if (overlay) {
+        overlay.onclick = () => {
+            sidebar.classList.remove('active');
+            overlay.classList.remove('active');
+        };
+    }
+
+    // Mode Toggle
+    const form = document.getElementById('profileForm');
+    const editBtn = document.getElementById('editBtn');
+    const cancelEdit = document.getElementById('cancelEdit');
+    const saveBtn = document.querySelector('.btn-save');
+    const imgLabel = document.getElementById('imgUploadLabel');
+
+    if (editBtn) editBtn.onclick = () => setMode('edit');
+    if (cancelEdit) cancelEdit.onclick = () => setMode('view');
+
+    function setMode(mode) {
+        if (mode === 'edit') {
+            form.classList.remove('view-mode');
+            form.classList.add('edit-mode');
+            editBtn.style.display = 'none';
+            cancelEdit.style.display = 'block';
+            saveBtn.style.display = 'block';
+            imgLabel.style.display = 'flex';
+        } else {
+            form.classList.remove('edit-mode');
+            form.classList.add('view-mode');
+            editBtn.style.display = 'block';
+            cancelEdit.style.display = 'none';
+            saveBtn.style.display = 'none';
+            imgLabel.style.display = 'none';
+            loadProfileFields();
+        }
+    }
+
+    function togglePass(id) {
+        const el = document.getElementById(id);
+        const icon = el.nextElementSibling;
+        if (el.type === 'password') {
+            el.type = 'text';
+            icon.classList.replace('bi-eye', 'bi-eye-slash');
+        } else {
+            el.type = 'password';
+            icon.classList.replace('bi-eye-slash', 'bi-eye');
+        }
+    }
+
+    function togglePassForm(show) {
+        document.getElementById('changePassForm').style.display = show ? 'block' : 'none';
+    }
+
+    const togglePassBtn = document.getElementById('togglePassFormBtn');
+    if (togglePassBtn) togglePassBtn.onclick = () => togglePassForm(true);
+
+    // Dynamic Fields Logic
+    let farmFields = user.farm_fields || [];
+    function renderFarmFields(isEdit = false) {
+        const container = document.getElementById('farmFieldsContainer');
+        const lang = localStorage.getItem('krishi_mitra_lang') || 'en';
+        const t = translations_ref[lang];
+        container.innerHTML = '';
+
+        if (farmFields.length === 0 && !isEdit) {
+            container.innerHTML = `<p class="text-muted text-center py-3">No farm details added.</p>`;
+            return;
+        }
+
+        farmFields.forEach((field, index) => {
+            if (isEdit) {
+                const row = document.createElement('div');
+                row.className = 'field-row';
+                row.innerHTML = `
+                    <i class="bi bi-x-circle-fill remove-field" onclick="removeField(${index})"></i>
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label class="form-label">${t.village_label || 'Village'}</label>
+                            <input type="text" class="form-control" value="${field.village || ''}" onchange="updateField(${index}, 'village', this.value)">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">${t.land_size_label || 'Land Size'}</label>
+                            <input type="number" step="0.1" class="form-control" value="${field.land_size || ''}" onchange="updateField(${index}, 'land_size', this.value)">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">${t.soil_type_label || 'Soil Type'}</label>
+                            <select class="form-select" onchange="updateField(${index}, 'soil_type', this.value)">
+                                <option value="">Select</option>
+                                <option value="Loamy" ${field.soil_type === 'Loamy' ? 'selected' : ''}>${t.soil_loamy}</option>
+                                <option value="Clayey" ${field.soil_type === 'Clayey' ? 'selected' : ''}>${t.soil_clayey}</option>
+                                <option value="Sandy" ${field.soil_type === 'Sandy' ? 'selected' : ''}>${t.soil_sandy}</option>
+                                <option value="Black" ${field.soil_type === 'Black' ? 'selected' : ''}>${t.black}</option>
+                                <option value="Red" ${field.soil_type === 'Red' ? 'selected' : ''}>${t.red}</option>
+                            </select>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(row);
+            } else {
+                const row = document.createElement('div');
+                row.className = 'field-row mb-2';
+                row.innerHTML = `
+                    <div class="row">
+                        <div class="col-4"><strong>${t.village_label || 'Village'}:</strong> ${field.village}</div>
+                        <div class="col-4"><strong>${t.land_size_label || 'Land Size'}:</strong> ${field.land_size} Acres</div>
+                        <div class="col-4"><strong>${t.soil_type_label || 'Soil Type'}:</strong> ${t['soil_' + field.soil_type?.toLowerCase()] || field.soil_type}</div>
+                    </div>
+                `;
+                container.appendChild(row);
+            }
+        });
+    }
+
+    window.removeField = (index) => {
+        farmFields.splice(index, 1);
+        renderFarmFields(true);
+    };
+
+    window.updateField = (index, key, val) => {
+        farmFields[index][key] = val;
+    };
+
+    const addFieldBtn = document.getElementById('addFieldBtn');
+    if (addFieldBtn) {
+        addFieldBtn.onclick = () => {
+            farmFields.push({ village: '', land_size: '', soil_type: '' });
+            renderFarmFields(true);
+        };
+    }
+
+    // Load Data
+    function loadProfileFields() {
+        const lang = localStorage.getItem('krishi_mitra_lang') || 'en';
+        const t = translations_ref[lang];
+        const isEdit = form.classList.contains('edit-mode');
+
+        // Basic
+        document.getElementById('view_name').innerText = user.name || '-';
+        document.getElementById('edit_name').value = user.name || '';
+        document.getElementById('view_mobile').innerText = user.mobile || user.email_mobile || '-';
+        document.getElementById('edit_mobile').value = user.mobile || user.email_mobile || '';
+        document.getElementById('view_email').innerText = user.email || '-';
+        document.getElementById('edit_email').value = user.email || '';
+        document.getElementById('view_age').innerText = user.age || '-';
+        document.getElementById('edit_age').value = user.age || '';
+        document.getElementById('view_gender').innerText = t[user.gender?.toLowerCase()] || user.gender || '-';
+        document.getElementById('edit_gender').value = user.gender || '';
+        document.getElementById('profileImg').src = user.photo || 'https://picsum.photos/seed/farmer/200';
+
+        // Location
+        document.getElementById('view_state').innerText = user.state || '-';
+        document.getElementById('edit_state').value = user.state || '';
+        document.getElementById('view_district').innerText = user.district || '-';
+        document.getElementById('edit_district').value = user.district || '';
+        document.getElementById('view_pincode').innerText = user.pincode || '-';
+        document.getElementById('edit_pincode').value = user.pincode || '';
+
+        // Farm Details (Multi)
+        farmFields = user.farm_fields || [];
+        renderFarmFields(isEdit);
+
+        // Market
+        document.getElementById('view_market').innerText = user.market || '-';
+        document.getElementById('edit_market').value = user.market || '';
+        document.getElementById('view_selling_type').innerText = t['selling_' + user.selling_type?.toLowerCase()] || user.selling_type || '-';
+        document.getElementById('edit_selling_type').value = user.selling_type || '';
+        document.getElementById('view_yield').innerText = user.avg_yield || '-';
+        document.getElementById('edit_yield').value = user.avg_yield || '';
+
+        // Risks
+        document.getElementById('view_problems').innerText = t['problem_' + user.problems?.toLowerCase()] || user.problems || '-';
+        document.getElementById('edit_problems').value = user.problems || '';
+        document.getElementById('view_risk').innerText = t[user.risk_level?.toLowerCase()] || user.risk_level || '-';
+        document.getElementById('edit_risk').value = user.risk_level || '';
+
+        // Security
+        document.getElementById('view_q1').innerText = user.security_question || '-';
+        document.getElementById('edit_q1').value = user.security_question || '';
+        document.getElementById('edit_a1').value = user.security_answer || '';
+        document.getElementById('view_q2').innerText = user.security_q2 || '-';
+        document.getElementById('edit_q2').value = user.security_q2 || '';
+        document.getElementById('edit_a2').value = user.security_a2 || '';
+
+        // Sync Info
+        document.getElementById('last_updated_val').innerText = user.last_updated || 'Never';
+        document.getElementById('updated_by_val').innerText = user.updated_by || 'N/A';
+
+        calculateCompletion();
+    }
+
+    function calculateCompletion() {
+        let completion = 0;
+        
+        // Basic (20%)
+        let basicCount = 0;
+        if(user.name) basicCount++;
+        if(user.mobile) basicCount++;
+        if(user.email) basicCount++;
+        if(user.age) basicCount++;
+        if(user.gender) basicCount++;
+        completion += (basicCount / 5) * 20;
+
+        // Location (15%)
+        let locCount = 0;
+        if(user.state) locCount++;
+        if(user.district) locCount++;
+        if(user.pincode) locCount++;
+        completion += (locCount / 3) * 15;
+
+        // Farm (25%) - Multiple fields check
+        if(user.farm_fields && user.farm_fields.length > 0) {
+            let validFields = user.farm_fields.filter(f => f.village && f.land_size && f.soil_type).length;
+            let ratio = Math.min(validFields / 1, 1); // at least one complete field
+            completion += ratio * 25;
+        }
+
+        // Market (15%)
+        let mktCount = 0;
+        if(user.market) mktCount++;
+        if(user.selling_type) mktCount++;
+        if(user.avg_yield) mktCount++;
+        completion += (mktCount / 3) * 15;
+
+        // Risk (5%)
+        let riskCount = 0;
+        if(user.problems) riskCount++;
+        if(user.risk_level) riskCount++;
+        completion += (riskCount / 2) * 5;
+
+        // Security (20%)
+        let secCount = 0;
+        if(user.security_question) secCount++;
+        if(user.security_answer) secCount++;
+        if(user.security_q2) secCount++;
+        if(user.security_a2) secCount++;
+        completion += (secCount / 4) * 20;
+
+        completion = Math.round(completion);
+        document.getElementById('progressBar').style.width = completion + '%';
+        document.getElementById('percentText').innerText = completion + '%';
+    }
+
+    // Photo Upload
+    document.getElementById('imgUpload').onchange = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                user.photo = event.target.result;
+                document.getElementById('profileImg').src = user.photo;
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+
+    // Form Submit
+    form.onsubmit = (e) => {
+        e.preventDefault();
+        
+        const lang = localStorage.getItem('krishi_mitra_lang') || 'en';
+        const t = translations_ref[lang];
+
+        // Custom Validation
+        const mobile = document.getElementById('edit_mobile').value;
+        if(mobile.length !== 10) {
+            return Swal.fire({ icon: 'error', text: t.invalid_mobile || 'Mobile must be 10 digits' });
+        }
+
+        Swal.fire({
+            title: t.proceed_confirm,
+            text: t.save_confirm_msg,
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#28a745',
+            cancelButtonColor: '#d33',
+            confirmButtonText: t.save_changes
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // Update User Object
+                user.name = document.getElementById('edit_name').value;
+                user.mobile = document.getElementById('edit_mobile').value;
+                user.email_mobile = user.mobile; // Sync for login compatibility
+                user.email = document.getElementById('edit_email').value;
+                user.age = document.getElementById('edit_age').value;
+                user.gender = document.getElementById('edit_gender').value;
+
+                user.state = document.getElementById('edit_state').value;
+                user.district = document.getElementById('edit_district').value;
+                user.pincode = document.getElementById('edit_pincode').value;
+
+                user.farm_fields = farmFields;
+
+                user.market = document.getElementById('edit_market').value;
+                user.selling_type = document.getElementById('edit_selling_type').value;
+                user.avg_yield = document.getElementById('edit_yield').value;
+
+                user.problems = document.getElementById('edit_problems').value;
+                user.risk_level = document.getElementById('edit_risk').value;
+
+                user.security_question = document.getElementById('edit_q1').value;
+                
+                const uAnswer1 = document.getElementById('edit_a1').value;
+                const uAnswer2 = document.getElementById('edit_a2').value;
+                if(uAnswer1 && uAnswer1.length < 6) return Swal.fire({ icon: 'warning', text: 'Answer must be at least 6 characters' });
+                if(uAnswer2 && uAnswer2.length < 6) return Swal.fire({ icon: 'warning', text: 'Answer must be at least 6 characters' });
+                user.security_answer = uAnswer1;
+                user.security_q2 = document.getElementById('edit_q2').value;
+                user.security_a2 = uAnswer2;
+
+                user.last_updated = new Date().toLocaleString();
+                user.updated_by = 'Farmer';
+
+                // Sync with lists
+                saveUser(user);
+
+                Swal.fire({
+                    icon: 'success',
+                    title: t.updated || 'Updated',
+                    text: t.profile_updated || 'Profile details saved successfully.',
+                    confirmButtonColor: '#1a531b'
+                });
+                setMode('view');
+            }
+        });
+    };
+
+    const submitPassBtn = document.getElementById('submitPassChange');
+    if (submitPassBtn) {
+        submitPassBtn.onclick = () => {
+            const qType = document.getElementById('pass_verify_q').value;
+            const answer = document.getElementById('pass_verify_a').value;
+            const nPass = document.getElementById('new_pass').value;
+            const passErr = window.getPasswordError(nPass);
+            if (passErr) {
+                Swal.fire({ icon: 'error', title: 'Invalid Password', text: passErr });
+                return;
+            }
+            const cPass = document.getElementById('confirm_new_pass').value;
+
+            if(!answer || !nPass || !cPass) return Swal.fire({ icon: 'warning', text: t.fields_required || 'All fields are required' });
+            if(nPass !== cPass) return Swal.fire({ icon: 'error', text: t.passwords_not_match || 'Passwords do not match' });
+
+            let verified = false;
+            if(qType === 'q1' && answer.toLowerCase() === user.security_answer?.toLowerCase()) verified = true;
+            if(qType === 'q2' && answer.toLowerCase() === user.security_a2?.toLowerCase()) verified = true;
+
+            if(verified) {
+                user.password = nPass;
+                user.last_updated = new Date().toLocaleString();
+                user.updated_by = 'Farmer';
+                saveUser(user);
+                Swal.fire({ icon: 'success', text: t.password_updated || 'Password updated successfully!' });
+                togglePassForm(false);
+            } else {
+                Swal.fire({ icon: 'error', text: t.incorrect_security_answer || 'Incorrect security answer' });
+            }
+        };
+    }
+
+    function saveUser(userData) {
+        localStorage.setItem('user', JSON.stringify(userData));
+        const users = JSON.parse(localStorage.getItem('users') || '[]');
+        const idx = users.findIndex(u => u.id === userData.id);
+        if (idx !== -1) {
+            users[idx] = { ...users[idx], ...userData };
+            localStorage.setItem('users', JSON.stringify(users));
+        }
+    }
+
+    // Logout
+    const logoutBtn = document.getElementById('logoutBtn');
+    if (logoutBtn) {
+        logoutBtn.onclick = () => {
+            const lang = localStorage.getItem('krishi_mitra_lang') || 'en';
+            const t = translations_ref[lang];
+            Swal.fire({
+                title: t.logout_confirm_title,
+                text: t.logout_confirm,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#28a745',
+                cancelButtonColor: '#d33',
+                confirmButtonText: t.logout
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    localStorage.removeItem('user');
+                    window.location.href = 'index.html#top';
+                }
+            });
+        };
+    }
+
+    loadProfileFields();
+</script>
+</body>
+</html>

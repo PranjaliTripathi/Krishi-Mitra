@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title data-t="all_crops_info_nav">Krishi Mitra - Smart Crop Information</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        :root { --primary-green: #1a531b; --secondary-green: #2e7d32; }
+        body { background-color: #f0f2f5; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        .sidebar { height: 100vh; background: var(--primary-green); color: white; position: fixed; width: 250px; transition: all 0.3s; z-index: 1000; }
+        .sidebar a { color: #cfdfcf; text-decoration: none; padding: 12px 20px; display: block; transition: 0.2s; border-radius: 8px; margin: 4px 10px; }
+        .sidebar a:hover, .sidebar a.active { background: var(--secondary-green); color: white; }
+        .sidebar .bottom-links { position: absolute; bottom: 20px; width: 100%; }
+        .main-content { margin-left: 250px; padding: 20px; transition: all 0.3s; }
+        .mobile-nav { display: none; background: var(--primary-green); color: white; padding: 10px 20px; position: sticky; top: 0; z-index: 1001; }
+        .crop-card { border: none; border-radius: 15px; transition: transform 0.2s; cursor: pointer; }
+        .crop-card:hover { transform: translateY(-5px); box-shadow: 0 10px 20px rgba(0,0,0,0.1) !important; }
+        @media (max-width: 768px) {
+            .sidebar { transform: translateX(-100%); width: 250px; }
+            .sidebar.active { transform: translateX(0); }
+            .main-content { margin-left: 0; }
+            .mobile-nav { display: flex; justify-content: space-between; align-items: center; }
+            .overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 999; }
+            .overlay.active { display: block; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="overlay" id="overlay"></div>
+
+<div class="mobile-nav">
+    <h4 class="mb-0"><i class="bi bi-leaf"></i> Krishi Mitra</h4>
+    <button class="btn text-white fs-3 p-0" id="menuToggle"><i class="bi bi-list"></i></button>
+</div>
+
+<div class="sidebar" id="sidebar">
+    <div class="p-4 text-center">
+        <h3 class="fw-bold"><i class="bi bi-leaf"></i> <span data-t="brand">Krishi Mitra</span></h3>
+    </div>
+    <nav>
+        <a href="farmer_dashboard.html"><i class="bi bi-speedometer2 me-2"></i> <span data-t="dashboard">Dashboard</span></a>
+        <a href="weather.html"><i class="bi bi-cloud-sun me-2"></i> <span data-t="weather_nav">Weather</span></a>
+        <a href="my_crops.html"><i class="bi bi-tree me-2"></i> <span data-t="my_crops_nav">My Crops</span></a>
+        <a href="all_crops_info.html" class="active"><i class="bi bi-journal-text me-2"></i> <span data-t="all_crops_info_nav">Smart Crop Information</span></a>
+        <a href="schemes.html"><i class="bi bi-award me-2"></i> <span data-t="schemes_nav">Schemes</span></a>
+        <a href="market_prices.html"><i class="bi bi-graph-up-arrow me-2"></i> <span data-t="market_prices_nav">Market Price</span></a>
+        <a href="notifications.html"><i class="bi bi-bell me-2"></i> <span data-t="notifications_nav">Notifications</span></a>
+        <a href="queries.html"><i class="bi bi-question-circle me-2"></i> <span data-t="my_queries">My Questions</span></a>
+        
+        <div class="bottom-links">
+            <a href="profile.html"><i class="bi bi-person-circle me-2"></i> <span data-t="profile_nav">Profile</span></a>
+            <a href="#" id="logoutBtn" class="text-danger"><i class="bi bi-box-arrow-right me-2"></i> <span data-t="logout">Logout</span></a>
+        </div>
+    </nav>
+</div>
+
+<div class="main-content">
+    <div class="container">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="fw-bold mb-0" data-t="all_crops_info_nav">Smart Crop Information</h2>
+            <button class="btn btn-outline-success" id="langToggle">
+                <i class="bi bi-translate me-1"></i> <span id="langToggleText">हिंदी</span>
+            </button>
+        </div>
+
+        <!-- Search and Filter -->
+        <div class="card border-0 shadow-sm p-4 mb-4 rounded-4">
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <div class="input-group">
+                        <span class="input-group-text bg-white border-end-0"><i class="bi bi-search"></i></span>
+                        <input type="text" class="form-control border-start-0" id="searchInput" data-t="search" placeholder="Search crops...">
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <select class="form-select" id="soilFilter">
+                        <option value="" data-t="all_types">सभी प्रकार</option>
+                        <option value="Loamy">दोमट</option>
+                        <option value="Clayey">चिकनी</option>
+                        <option value="Sandy">बलुई</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <select class="form-select" id="seasonFilter">
+                        <option value="" data-t="all_seasons">सभी सीजन</option>
+                        <option value="Kharif">खरीफ</option>
+                        <option value="Rabi">रबी</option>
+                        <option value="Zaid">जायद</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <select class="form-select" id="durationFilter">
+                        <option value="" data-t="all_durations">सभी अवधि</option>
+                        <option value="60">60 दिन</option>
+                        <option value="90">90 दिन</option>
+                        <option value="120">120 दिन</option>
+                        <option value="150">150 दिन</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Crops Grid -->
+        <div class="row g-4" id="cropsGrid">
+            <!-- Crops will be loaded here -->
+        </div>
+    </div>
+</div>
+
+<script src="translations.js"></script>
+<script src="crops_data.js"></script>
+<script>
+    const user = JSON.parse(localStorage.getItem('user'));
+    if (!user || user.role !== 'farmer') window.location.href = 'login.html';
+
+    const cropsGrid = document.getElementById('cropsGrid');
+    const searchInput = document.getElementById('searchInput');
+    const soilFilter = document.getElementById('soilFilter');
+    const seasonFilter = document.getElementById('seasonFilter');
+    const durationFilter = document.getElementById('durationFilter');
+
+    // Sync initialization
+    if (!localStorage.getItem('admin_crops')) {
+        localStorage.setItem('admin_crops', JSON.stringify(cropsData));
+    }
+    
+    let displayCrops = JSON.parse(localStorage.getItem('admin_crops'));
+
+    function renderCrops(filteredCrops) {
+        const lang = localStorage.getItem('krishi_mitra_lang') || 'en';
+        const t = translations[lang];
+
+        if (filteredCrops.length === 0) {
+            cropsGrid.innerHTML = `<div class="col-12 text-center py-5"><h5 class="text-muted">No crops found matching your criteria.</h5></div>`;
+            return;
+        }
+
+        cropsGrid.innerHTML = filteredCrops.map(crop => `
+            <div class="col-md-6 col-lg-4">
+                <div class="card crop-card shadow-sm h-100 p-4" onclick="viewCropDetails(${crop.id})">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div class="bg-success bg-opacity-10 p-3 rounded-4">
+                            <i class="bi bi-tree text-success fs-3"></i>
+                        </div>
+                        <span class="badge bg-success bg-opacity-10 text-success px-3 py-2 rounded-pill">
+                            ${lang === 'en' ? (crop.season_en || "Kharif") : (crop.season_hi || "खरीफ")}
+                        </span>
+                    </div>
+                    <h4 class="fw-bold mb-2">${lang === 'en' ? (crop.name_en || "Crop") : (crop.name_hi || "फसल")}</h4>
+                    <div class="text-muted small mb-3">
+                        <i class="bi bi-geo-alt me-1"></i> ${lang === 'en' ? (crop.soil_en || "Soil") : (crop.soil_hi || "मिट्टी")}
+                    </div>
+                    <div class="row g-2 mt-auto">
+                        <div class="col-6">
+                            <div class="p-2 bg-light rounded-3 text-center">
+                                <small class="text-muted d-block" data-t="duration">${t.duration}</small>
+                                <span class="fw-bold">${crop.duration || 0} ${t.days}</span>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="p-2 bg-light rounded-3 text-center">
+                                <small class="text-muted d-block" data-t="profit_per_acre">${t.profit_per_acre}</small>
+                                <span class="fw-bold text-success">₹ ${crop.profit || 0}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    function filterCrops() {
+        const lang = localStorage.getItem('krishi_mitra_lang') || 'en';
+        const t = (typeof translations !== 'undefined') ? translations[lang] : {};
+        // Ensure we use the latest data from localStorage
+        const currentCrops = JSON.parse(localStorage.getItem('crops_data')) || JSON.parse(localStorage.getItem('admin_crops')) || cropsData;
+
+        const searchTerm = searchInput.value.toLowerCase().trim();
+        const soil = soilFilter.value;
+        const season = seasonFilter.value;
+        const duration = durationFilter.value;
+
+        const filtered = currentCrops.filter(crop => {
+            // Visibility check: Only active crops
+            if (crop.active === false) return false;
+
+            // 1. Search Filter
+            const name = (lang === 'en' ? (crop.name_en || "") : (crop.name_hi || "")).toLowerCase();
+            const matchesSearch = searchTerm === "" || name.includes(searchTerm);
+
+            // 2. Soil Filter (AND logic)
+            // Empty string means "All" / ignore filter
+            let matchesSoil = true;
+            if (soil !== "") {
+                const cropSoilEn = (crop.soil_en || "").toLowerCase();
+                const cropSoilHi = (crop.soil_hi || "").toLowerCase();
+                const targetSoil = soil.toLowerCase();
+                matchesSoil = cropSoilEn.includes(targetSoil) || cropSoilHi.includes(targetSoil);
+            }
+
+            // 3. Season Filter (AND logic)
+            let matchesSeason = true;
+            if (season !== "") {
+                const cropSeasonEn = (crop.season_en || "").toLowerCase();
+                const cropSeasonHi = (crop.season_hi || "").toLowerCase();
+                const targetSeason = season.toLowerCase();
+                matchesSeason = cropSeasonEn === targetSeason || cropSeasonHi === targetSeason;
+            }
+
+            // 4. Duration Filter (AND logic)
+            let matchesDuration = true;
+            const cropDur = parseInt(crop.duration) || 0;
+            if (duration === '60') {
+                matchesDuration = cropDur <= 75;
+            } else if (duration === '90') {
+                matchesDuration = cropDur > 75 && cropDur <= 105;
+            } else if (duration === '120') {
+                matchesDuration = cropDur > 105 && cropDur <= 135;
+            } else if (duration === '150') {
+                matchesDuration = cropDur > 135;
+            }
+
+            // Combined logic: All conditions must be met
+            return matchesSearch && matchesSoil && matchesSeason && matchesDuration;
+        });
+
+        renderCrops(filtered);
+    }
+
+    function viewCropDetails(id) {
+        window.location.href = `crop_details.html?id=${id}`;
+    }
+
+    searchInput.addEventListener('input', filterCrops);
+    soilFilter.addEventListener('change', filterCrops);
+    seasonFilter.addEventListener('change', filterCrops);
+    durationFilter.addEventListener('change', filterCrops);
+
+    // Sidebar Toggle
+    const menuToggle = document.getElementById('menuToggle');
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('overlay');
+
+    menuToggle.addEventListener('click', () => {
+        sidebar.classList.add('active');
+        overlay.classList.add('active');
+    });
+
+    overlay.addEventListener('click', () => {
+        sidebar.classList.remove('active');
+        overlay.classList.remove('active');
+    });
+
+    // Language Toggle
+    document.getElementById('langToggle').addEventListener('click', () => {
+        const currentLang = localStorage.getItem('krishi_mitra_lang') || 'en';
+        const newLang = currentLang === 'en' ? 'hi' : 'en';
+        setLanguage(newLang);
+        filterCrops(); // Re-render with new language
+    });
+
+    // Logout
+    document.getElementById('logoutBtn').addEventListener('click', () => {
+        const lang = localStorage.getItem('krishi_mitra_lang') || 'en';
+        const t = translations[lang];
+        Swal.fire({
+            title: t.logout_confirm_title,
+            text: t.logout_confirm,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#28a745',
+            cancelButtonColor: '#d33',
+            confirmButtonText: t.logout
+        }).then((result) => {
+            if (result.isConfirmed) {
+                localStorage.removeItem('user');
+                window.location.href = 'index.html#top';
+            }
+        });
+    });
+
+    function updateFiltersUI() {
+        const lang = localStorage.getItem('krishi_mitra_lang') || 'en';
+        const t = translations[lang];
+
+        document.getElementById('searchInput').placeholder = lang === 'hi' ? 'फसलें खोजें...' : 'Search crops...';
+        
+        // Update soil filter options
+        const soilFilter = document.getElementById('soilFilter');
+        soilFilter.options[0].text = t.all_types;
+        soilFilter.options[1].text = t.soil_loamy;
+        soilFilter.options[2].text = t.soil_clayey;
+        soilFilter.options[3].text = t.soil_sandy;
+
+        // Update season filter options
+        const seasonFilter = document.getElementById('seasonFilter');
+        seasonFilter.options[0].text = t.all_seasons;
+        seasonFilter.options[1].text = t.season_kharif;
+        seasonFilter.options[2].text = t.season_rabi;
+        seasonFilter.options[3].text = t.season_zaid;
+
+        // Update duration filter options
+        const durationFilter = document.getElementById('durationFilter');
+        durationFilter.options[0].text = t.all_durations;
+        durationFilter.options[1].text = t.sixty_days;
+        durationFilter.options[2].text = t.ninety_days;
+        durationFilter.options[3].text = t.one_twenty_days;
+        durationFilter.options[4].text = t.one_fifty_days;
+    }
+
+    // Initial Render
+    updateFiltersUI();
+    filterCrops();
+
+    // Listen for data changes from Admin Panel
+    window.addEventListener('storage', (e) => {
+        if (e.key === 'krishi_mitra_lang' || e.key === 'admin_crops') {
+            if (e.key === 'admin_crops') {
+                displayCrops = JSON.parse(e.newValue);
+            }
+            updateFiltersUI();
+            filterCrops();
+        }
+    });
+</script>
+</body>
+</html>

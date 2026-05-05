@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Market Price - Krishi Mitra</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --primary-green: #1a531b;
+            --accent-green: #2e7d32;
+            --light-bg: #f8f9fa;
+        }
+        body { font-family: 'Inter', sans-serif; background: var(--light-bg); color: #333; }
+        
+        /* Mobile Sidebar Toggle */
+        #menuToggle { display: none; }
+        .sidebar { height: 100vh; background: var(--primary-green); color: white; position: fixed; width: 260px; z-index: 1000; transition: all 0.3s; }
+        .main-content { margin-left: 260px; padding: 40px; min-height: 100vh; transition: all 0.3s; }
+        .overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 999; }
+
+        @media (max-width: 991.98px) {
+            .sidebar { left: -260px; }
+            .sidebar.active { left: 0; }
+            .main-content { margin-left: 0; padding: 20px; }
+            #menuToggle { display: block; }
+            .overlay.active { display: block; }
+        }
+
+        .card { border: none; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); }
+        .btn-success { background-color: var(--primary-green); border: none; }
+        .btn-success:hover { background-color: var(--accent-green); }
+        .form-label { font-weight: 600; color: #555; }
+        
+        .history-row { transition: background 0.2s; }
+        .history-row:hover { background-color: #f1f8f1; }
+        
+        .trend-up { color: #28a745; font-weight: bold; }
+        .trend-down { color: #dc3545; font-weight: bold; }
+        .trend-stable { color: #6c757d; font-weight: bold; }
+        
+        .diff-plus { color: #28a745; }
+        .diff-minus { color: #dc3545; }
+        .diff-neutral { color: #6c757d; }
+    </style>
+</head>
+<body>
+
+    <div class="overlay" id="overlay"></div>
+
+    <div class="sidebar" id="sidebar">
+        <div class="p-4">
+            <h3 class="fw-bold mb-4" data-t="brand">Krishi Mitra</h3>
+            <hr>
+            <nav class="nav flex-column">
+                <a class="nav-link text-white mb-2 p-3 rounded-3" href="admin_dashboard.html">
+                    <i class="bi bi-speedometer2 me-2"></i> <span data-t="dashboard">Dashboard</span>
+                </a>
+                <a class="nav-link text-white mb-2 p-3 rounded-3 active bg-white bg-opacity-10" href="admin_dashboard.html?section=admMandi">
+                    <i class="bi bi-shop me-2"></i> <span data-t="market_prices">Market Prices</span>
+                </a>
+            </nav>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <!-- Sticky Top Bar for Back Button -->
+        <div class="sticky-top p-3 bg-white border-bottom shadow-sm d-flex align-items-center mb-4" style="z-index: 1020; margin: -40px -40px 40px -40px;">
+            <button class="btn btn-light me-3 d-lg-none" id="menuToggle"><i class="bi bi-list fs-3"></i></button>
+            <button type="button" class="btn btn-outline-secondary rounded-pill px-3" onclick="goBack()"><i class="bi bi-arrow-left me-1"></i> <span data-t="back_btn">Back</span></button>
+            <h4 class="fw-bold mb-0 ms-3 d-none d-sm-block text-truncate" id="topCropTitle"></h4>
+        </div>
+        <div class="container-fluid">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div class="d-flex align-items-center">
+                    <h2 class="fw-bold mb-0" data-t="action_edit">Edit Market Price</h2>
+                </div>
+                <div id="cropTitle" class="h4 mb-0 fw-bold text-success d-none d-md-block"></div>
+            </div>
+
+            <div class="row g-4">
+                <!-- Edit Form -->
+                <div class="col-lg-7">
+                    <div class="card p-4 h-100">
+                        <form id="editMandiForm">
+                            <div class="row g-4">
+                                <div class="col-md-6">
+                                    <label class="form-label" data-t="name_label">Crop Name</label>
+                                    <input type="text" id="mandiCrop" class="form-control rounded-3" disabled>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label" data-t="market_name">Market/City</label>
+                                    <select id="mandiMarket" class="form-select rounded-3" onchange="handleCityChange()">
+                                        <!-- Populated dynamically -->
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label" data-t="price_per_q">Price per Quintal (₹)</label>
+                                    <input type="number" id="mandiPrice" class="form-control rounded-3" step="0.01" min="0" required oninput="validatePrice(this)">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label" data-t="datetime">Date</label>
+                                    <input type="date" id="mandiDate" class="form-control rounded-3" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label" data-t="status">Status</label>
+                                    <select id="mandiStatus" class="form-select rounded-3">
+                                        <option value="Active" data-t="active">Active</option>
+                                        <option value="Inactive" data-t="inactive">Inactive</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label" data-t="trend">15-Day Trend</label>
+                                    <div id="trendDisplay" class="py-2">--</div>
+                                </div>
+                            </div>
+
+                            <div class="mt-4 pt-4 border-top text-end">
+                                <button type="submit" class="btn btn-success rounded-pill px-5 fw-bold"><i class="bi bi-check2-circle me-1"></i> <span data-t="save_changes">Save Changes</span></button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Price Trend Graph -->
+                <div class="col-lg-5">
+                    <div class="card p-4 h-100">
+                        <h5 class="fw-bold mb-4" data-t="price_trend_30">30-Day Price Trend</h5>
+                        <div style="height: 300px;">
+                            <canvas id="priceChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Price History -->
+                <div class="col-12">
+                    <div id="priceHistory" class="card p-4">
+                        <h5 class="fw-bold mb-4" data-t="history">Price History</h5>
+                        <div class="table-responsive">
+                            <table class="table align-middle">
+                                <thead class="bg-light">
+                                    <tr>
+                                        <th data-t="market_name">Market/City</th>
+                                        <th data-t="date">Date</th>
+                                        <th data-t="old_price">Old Price</th>
+                                        <th data-t="new_price">New Price</th>
+                                        <th data-t="difference">Difference</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="historyList"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add New City Modal -->
+    <div class="modal fade" id="addCityModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content rounded-4 border-0">
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title fw-bold" data-t="add_new_city">Add New City</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <form id="addCityForm">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold" data-t="market_name">City Name</label>
+                            <input type="text" id="newCityName" class="form-control rounded-3" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold" data-t="price_per_q">Price (₹)</label>
+                            <input type="number" id="newCityPrice" class="form-control rounded-3" step="0.01" min="0" required oninput="validatePrice(this)">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold" data-t="datetime">Date</label>
+                            <input type="date" id="newCityDate" class="form-control rounded-3" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold" data-t="status">Status</label>
+                            <select id="newCityStatus" class="form-select rounded-3">
+                                <option value="Active" data-t="active">Active</option>
+                                <option value="Inactive" data-t="inactive">Inactive</option>
+                            </select>
+                        </div>
+                        <div class="text-end mt-4">
+                            <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal" data-t="cancel">Cancel</button>
+                            <button type="submit" class="btn btn-success rounded-pill px-4 fw-bold" data-t="save_changes">Save City</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS (needed for modal) -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="translations.js"></script>
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        let mandiId = urlParams.get('id');
+        let chart = null;
+
+        let currentCrop = null;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            if (!mandiId) {
+                window.location.href = 'admin_dashboard.html';
+                return;
+            }
+            initMobileSidebar();
+            
+            // Set current crop based on MandyId first
+            const mandiData = JSON.parse(localStorage.getItem('mandiData')) || { prices: [] };
+            const item = mandiData.prices.find(p => p.id == mandiId);
+            if (item) {
+                currentCrop = item.crop;
+                populateCityDropdown(mandiData.prices);
+            }
+            
+            loadMandiDetail();
+            applyTranslations();
+        });
+
+        function validatePrice(input) {
+            if (!input.value) return;
+            // Remove negative sign if typed
+            if (input.value < 0) {
+                input.value = Math.abs(input.value);
+            }
+            // Allow only two decimal places
+            if (input.value.indexOf('.') !== -1) {
+                let decimals = input.value.split('.')[1];
+                if (decimals && decimals.length > 2) {
+                    input.value = parseFloat(input.value).toFixed(2);
+                }
+            }
+        }
+
+        function populateCityDropdown(prices) {
+            const marketSelect = document.getElementById('mandiMarket');
+            const lang = localStorage.getItem('krishi_mitra_lang') || 'en';
+            const t = translations[lang];
+            
+            // Get unique cities for the current crop
+            const cropRecords = prices.filter(p => p.crop === currentCrop);
+            marketSelect.innerHTML = cropRecords.map(p => 
+                `<option value="${p.id}" ${p.id == mandiId ? 'selected' : ''}>${t[p.market.toLowerCase()] || p.market}</option>`
+            ).join('');
+            
+            marketSelect.innerHTML += `<option value="ADD_NEW" class="fw-bold text-success">+ ${lang === 'hi' ? 'नया शहर जोड़ें' : 'Add New City'}</option>`;
+        }
+
+        function handleCityChange() {
+            const marketSelect = document.getElementById('mandiMarket');
+            const selectedVal = marketSelect.value;
+            
+            if (selectedVal === 'ADD_NEW') {
+                // Show modal, restore previous select value for now
+                marketSelect.value = mandiId;
+                const modal = new bootstrap.Modal(document.getElementById('addCityModal'));
+                document.getElementById('addCityForm').reset();
+                document.getElementById('newCityDate').value = new Date().toISOString().split('T')[0];
+                modal.show();
+            } else {
+                // Change the current ID and reload details
+                mandiId = selectedVal;
+                
+                // Update URL parameter without reloading page
+                const newurl = window.location.protocol + "//" + window.location.host + window.location.pathname + '?id=' + mandiId;
+                window.history.pushState({path:newurl}, '', newurl);
+                
+                loadMandiDetail();
+            }
+        }
+
+        document.getElementById('addCityForm').onsubmit = (e) => {
+            e.preventDefault();
+            const lang = localStorage.getItem('krishi_mitra_lang') || 'en';
+            const t = translations[lang];
+            
+            const cityName = document.getElementById('newCityName').value.trim();
+            const price = parseFloat(document.getElementById('newCityPrice').value);
+            const date = document.getElementById('newCityDate').value;
+            const status = document.getElementById('newCityStatus').value;
+            
+            let mandiData = JSON.parse(localStorage.getItem('mandiData'));
+            
+            // check if city already exists for this crop
+            const existing = mandiData.prices.find(p => p.crop === currentCrop && p.market.toLowerCase() === cityName.toLowerCase());
+            if (existing) {
+                Swal.fire({
+                    title: 'City Exists',
+                    text: 'This city already exists for the current crop. Please select it from the dropdown.',
+                    icon: 'warning'
+                });
+                bootstrap.Modal.getInstance(document.getElementById('addCityModal')).hide();
+                return;
+            }
+            
+            const newId = Date.now() + Math.random();
+            const newRecord = {
+                id: newId,
+                crop: currentCrop,
+                market: cityName,
+                price: price,
+                date: date,
+                status: status,
+                trend: 'stable',
+                history: [{ date, price }]
+            };
+            
+            mandiData.prices.push(newRecord);
+            mandiData.lastUpdated = new Date().toLocaleString();
+            mandiData.updatedBy = 'Admin';
+            
+            localStorage.setItem('mandiData', JSON.stringify(mandiData));
+            
+            // Close modal
+            bootstrap.Modal.getInstance(document.getElementById('addCityModal')).hide();
+            
+            // Switch to the newly created record
+            mandiId = newId;
+            const newurl = window.location.protocol + "//" + window.location.host + window.location.pathname + '?id=' + mandiId;
+            window.history.pushState({path:newurl}, '', newurl);
+            
+            populateCityDropdown(mandiData.prices);
+            loadMandiDetail();
+            
+            Swal.fire({
+                title: 'Saved!',
+                text: 'New city added successfully.',
+                icon: 'success',
+                timer: 1500,
+                showConfirmButton: false
+            });
+        };
+
+        function initMobileSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('overlay');
+            const menuToggle = document.getElementById('menuToggle');
+
+            menuToggle.onclick = () => {
+                sidebar.classList.add('active');
+                overlay.classList.add('active');
+            };
+
+            overlay.onclick = () => {
+                sidebar.classList.remove('active');
+                overlay.classList.remove('active');
+            };
+        }
+
+        function goBack() {
+            window.location.href = 'admin_dashboard.html?section=admMandi';
+        }
+
+        function loadMandiDetail() {
+            const mandiData = JSON.parse(localStorage.getItem('mandiData')) || { prices: [] };
+            const item = mandiData.prices.find(p => p.id == mandiId);
+
+            if (!item) {
+                window.location.href = 'admin_dashboard.html';
+                return;
+            }
+
+            const lang = localStorage.getItem('krishi_mitra_lang') || 'en';
+            const t = translations[lang];
+
+            document.getElementById('mandiCrop').value = t[item.crop.toLowerCase()] || item.crop;
+            document.getElementById('mandiMarket').value = item.id;
+            document.getElementById('mandiPrice').value = item.price;
+            document.getElementById('mandiDate').value = item.date || new Date().toISOString().split('T')[0];
+            document.getElementById('mandiStatus').value = item.status || 'Active';
+            document.getElementById('cropTitle').innerText = t[item.crop.toLowerCase()] || item.crop;
+            document.getElementById('topCropTitle').innerText = t[item.crop.toLowerCase()] || item.crop;
+
+            // Trend Calculation Logic (15 Days)
+            calculate15DayTrend(item);
+
+            // Graph Visualization (Last 30 Days if exists, else whatever we have)
+            renderPriceChart(item);
+
+            // Load history
+            renderHistory(item);
+        }
+
+        function calculate15DayTrend(item) {
+            const lang = localStorage.getItem('krishi_mitra_lang') || 'en';
+            const t = translations[lang];
+            const display = document.getElementById('trendDisplay');
+
+            if (!item.history || item.history.length < 2) {
+                display.innerHTML = `<span class="trend-stable"><i class="bi bi-dash-lg"></i> ${t.no_change}</span>`;
+                return;
+            }
+
+            // Simple 15 day logic: compare current price with price 15 entries ago (or oldest available)
+            const current = item.price;
+            const oldestIn15 = item.history.slice(0, 15).slice(-1)[0].price;
+
+            if (current > oldestIn15) {
+                display.innerHTML = `<span class="trend-up"><i class="bi bi-arrow-up-circle-fill"></i> ${t.increased}</span>`;
+            } else if (current < oldestIn15) {
+                display.innerHTML = `<span class="trend-down"><i class="bi bi-arrow-down-circle-fill"></i> ${t.decreased}</span>`;
+            } else {
+                display.innerHTML = `<span class="trend-stable"><i class="bi bi-dash-lg"></i> ${t.no_change}</span>`;
+            }
+        }
+
+        function renderPriceChart(item) {
+            const ctx = document.getElementById('priceChart').getContext('2d');
+            const history = item.history || [];
+            
+            // Reverse history to show chronological order on X-axis (Oldest -> Newest)
+            const sortedHistory = [...history].reverse();
+            const labels = sortedHistory.map(h => h.date);
+            const prices = sortedHistory.map(h => h.price);
+
+            if (chart) chart.destroy();
+
+            chart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Price (₹/q)',
+                        data: prices,
+                        borderColor: '#1a531b',
+                        backgroundColor: 'rgba(26, 83, 27, 0.1)',
+                        fill: true,
+                        tension: 0.4,
+                        pointRadius: 4,
+                        pointBackgroundColor: '#1a531b'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        y: { beginAtZero: false, grid: { color: '#eee' } },
+                        x: { grid: { display: false } }
+                    }
+                }
+            });
+        }
+
+        function renderHistory(item) {
+            const lang = localStorage.getItem('krishi_mitra_lang') || 'en';
+            const t = translations[lang];
+            const historyList = document.getElementById('historyList');
+            
+            const history = item.history || [];
+            if (history.length === 0) {
+                historyList.innerHTML = '<tr><td colspan="5" class="text-center text-muted py-3">No history available</td></tr>';
+                return;
+            }
+
+            // To show old -> new price, we need to compare with the entry BEFORE it in the list
+            // Note: history is unshifted (newest first)
+            historyList.innerHTML = history.map((h, i) => {
+                const nextEntry = history[i + 1];
+                const oldPrice = nextEntry ? nextEntry.price : h.price;
+                const newPrice = h.price;
+                const diff = newPrice - oldPrice;
+                const diffClass = diff > 0 ? 'diff-plus' : (diff < 0 ? 'diff-minus' : 'diff-neutral');
+                const diffIcon = diff > 0 ? '<i class="bi bi-plus"></i>' : (diff < 0 ? '' : '');
+                
+                // Format Date to DD/MM/YYYY
+                const d = new Date(h.date);
+                const formattedDate = d.toLocaleDateString('en-GB');
+                const marketNameT = t[item.market.toLowerCase()] || item.market;
+
+                return `
+                    <tr class="history-row">
+                        <td>${marketNameT}</td>
+                        <td>${formattedDate}</td>
+                        <td class="text-muted">₹ ${parseFloat(oldPrice).toFixed(2)}</td>
+                        <td class="fw-bold text-success">₹ ${parseFloat(newPrice).toFixed(2)}</td>
+                        <td class="${diffClass} fw-bold">
+                            ${diff !== 0 ? `${diffIcon}₹ ${Math.abs(diff).toFixed(2)}` : t.no_change}
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        document.getElementById('editMandiForm').onsubmit = (e) => {
+            e.preventDefault();
+            const lang = localStorage.getItem('krishi_mitra_lang') || 'en';
+            const t = translations[lang];
+
+            Swal.fire({
+                title: t.confirm_save_mandi,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#1a531b',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: lang === 'hi' ? 'हाँ' : 'Yes',
+                cancelButtonText: lang === 'hi' ? 'नहीं' : 'No'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    saveMandiChanges();
+                }
+            });
+        };
+
+        function saveMandiChanges() {
+            const price = parseFloat(document.getElementById('mandiPrice').value);
+            const date = document.getElementById('mandiDate').value;
+            const status = document.getElementById('mandiStatus').value;
+
+            let mandiData = JSON.parse(localStorage.getItem('mandiData'));
+            const idx = mandiData.prices.findIndex(p => p.id == mandiId);
+
+            if (idx !== -1) {
+                const oldPrice = mandiData.prices[idx].price;
+                
+                // Update basic data
+                mandiData.prices[idx].price = price;
+                mandiData.prices[idx].date = date;
+                mandiData.prices[idx].status = status;
+
+                // Add to history if price changed or first entry
+                const lastHistory = mandiData.prices[idx].history?.[0];
+                if (!lastHistory || lastHistory.price !== price || lastHistory.date !== date) {
+                    if (!mandiData.prices[idx].history) mandiData.prices[idx].history = [];
+                    mandiData.prices[idx].history.unshift({ date, price });
+                    // Keep last 30 entries for the graph
+                    mandiData.prices[idx].history = mandiData.prices[idx].history.slice(0, 30);
+                }
+
+                // Recalculate trend for consistency
+                const oldestIn15 = mandiData.prices[idx].history.slice(0, 15).slice(-1)[0].price;
+                mandiData.prices[idx].trend = price > oldestIn15 ? 'up' : (price < oldestIn15 ? 'down' : 'stable');
+
+                mandiData.lastUpdated = new Date().toLocaleString();
+                mandiData.updatedBy = 'Admin';
+
+                localStorage.setItem('mandiData', JSON.stringify(mandiData));
+                
+                Swal.fire({
+                    title: 'Saved!',
+                    text: 'Market price updated successfully.',
+                    icon: 'success',
+                    timer: 1500,
+                    showConfirmButton: false
+                }).then(() => {
+                    goBack();
+                });
+            }
+        }
+    </script>
+</body>
+</html>

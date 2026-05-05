@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Terms & Conditions - Krishi Mitra</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-green: #1b5e20;
+            --secondary-green: #4caf50;
+            --bg-light: #f9fbf9;
+            --text-dark: #111827;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            color: var(--text-dark);
+            background: linear-gradient(180deg, #ffffff 0%, #f0f7f0 100%);
+            margin: 0;
+            padding: 60px 20px;
+            min-height: 100vh;
+        }
+        h1, h2, h3, .nav-brand {
+            font-family: 'Poppins', sans-serif;
+        }
+        .terms-container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            padding: 50px;
+            border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+        }
+        .terms-header {
+            text-align: center;
+            margin-bottom: 40px;
+            border-bottom: 2px solid #e8f5e9;
+            padding-bottom: 20px;
+        }
+        .terms-header h1 {
+            color: var(--primary-green);
+            font-weight: 800;
+            font-size: 2.5rem;
+        }
+        .terms-content {
+            line-height: 2;
+            font-size: 1.05rem;
+            color: #374151;
+        }
+        .terms-content p {
+            margin-bottom: 25px;
+            text-align: justify;
+        }
+        .terms-content h3 {
+            color: var(--primary-green);
+            font-weight: 700;
+            margin: 40px 0 20px;
+            font-size: 1.4rem;
+        }
+        .back-btn {
+            background-color: var(--primary-green);
+            color: white;
+            font-weight: 600;
+            border-radius: 12px;
+            padding: 12px 30px;
+            text-decoration: none;
+            display: inline-block;
+            margin-top: 40px;
+            transition: all 0.3s;
+            box-shadow: 0 4px 12px rgba(27, 94, 32, 0.2);
+        }
+        .back-btn:hover {
+            background-color: #0c3d0f;
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(27, 94, 32, 0.3);
+        }
+        @media (max-width: 768px) {
+            .terms-container { padding: 30px 20px; }
+            .terms-header h1 { font-size: 2rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="terms-container">
+        <div class="terms-header">
+            <h1 id="termsTitle">Terms & Conditions</h1>
+            <p class="text-muted" id="lastUpdated">Effective Date: April 2026</p>
+        </div>
+        <div class="terms-content" id="termsContent">
+            <!-- Content loaded via JS -->
+        </div>
+        <div class="text-center">
+            <a href="index.html" class="back-btn" id="backBtnText"><i class="bi bi-arrow-left"></i> Back to Home</a>
+        </div>
+    </div>
+
+    <script>
+        const translations = {
+            en: {
+                title: "Terms & Conditions",
+                updated: "Effective Date: April 2026",
+                back: '<i class="bi bi-arrow-left"></i> Back to Home',
+                content: `
+                    <h3>1. Introduction</h3>
+                    <p>Welcome to Krishi Mitra – Smart Farmer Advisory System. These Terms and Conditions govern your use of our website and services. By accessing or using Krishi Mitra, you acknowledge that you have read, understood, and agreed to be bound by these legal terms. If you do not agree with any part of these terms, you must immediately discontinue use of the platform. We reserve the right to deny access to anyone who violates these conditions.</p>
+
+                    <h3>2. User Responsibilities</h3>
+                    <p>Users are expected to provide accurate, current, and complete information during registration and while submitting queries. You are responsible for maintaining the confidentiality of your account credentials and for all activities that occur under your account. Any attempt to use the platform for unauthorized advertising, spamming, or fraudulent activities is strictly prohibited. Users must engage with the system respectfully and refrain from submitting any offensive or illegal content.</p>
+
+                    <h3>3. Data Usage Policy</h3>
+                    <p>The data provided through Krishi Mitra, including but not limited to crop intelligence, market trends, and advisory responses, is intended for general informational purposes only. We strive to provide quality information, but we do not guarantee its completeness or suitability for a specific farming decision. Your usage of the data is at your own discrepancy and risk. Krishi Mitra retains the right to aggregate anonymized data for research and platform improvement purposes.</p>
+
+                    <h3>4. External Data Disclaimer</h3>
+                    <p>Krishi Mitra integrates dynamic data from various external sources, such as official meteorological departments for weather updates and market portals for Mandi Bhav (prices). We do not own or control these external services. Consequently, while we aim for high reliability, we cannot guarantee the absolute accuracy, timeliness, or availability of this external data. Users should cross-verify critical information with official government gazettes or physical market enquiries before making high-stakes financial decisions.</p>
+
+                    <h3>5. Limitation of Liability</h3>
+                    <p>To the maximum extent permitted by law, Krishi Mitra, its administrators, and its partners shall not be liable for any direct, indirect, incidental, or consequential damages resulting from your use or inability to use the platform. This includes, but is not limited to, losses involving crop failure, financial investments, or business interruptions. Farming is subject to numerous external variables (climate, pest outbreaks, market volatility) beyond the control of any advisory system.</p>
+
+                    <h3>6. Privacy Mention</h3>
+                    <p>Your privacy is of utmost importance to us. The collection and use of your personal data are governed by our Privacy Policy. We ensure that your contact information and farm details are kept secure and only utilized to provide localized advisory services. We do not sell your personal data to third-party advertisers. By using Krishi Mitra, you also agree to the practices outlined in our Privacy Policy.</p>
+
+                    <h3>7. Changes to Terms</h3>
+                    <p>We reserve the right, at our sole discretion, to modify or replace these Terms and Conditions at any time. Significant changes will be announced on our homepage or via system notifications. By continuing to access or use our platform after those revisions become effective, you agree to be bound by the revised terms. We recommend that users periodically review this page to stay informed about their legal rights and obligations.</p>
+                `
+            },
+            hi: {
+                title: "नियम एवं शर्तें",
+                updated: "प्रभावी तिथि: अप्रैल 2026",
+                back: '<i class="bi bi-arrow-left"></i> वापस घर जाएं',
+                content: `
+                    <h3>1. परिचय</h3>
+                    <p>कृषि मित्र – स्मार्ट किसान सलाहकार प्रणाली में आपका स्वागत है। ये नियम और शर्तें हमारी वेबसाइट और सेवाओं के आपके उपयोग को नियंत्रित करती हैं। कृषि मित्र का उपयोग करके, आप स्वीकार करते हैं कि आपने इन कानूनी शर्तों को पढ़ा, समझा और उनसे सहमत हैं। यदि आप इन शर्तों के किसी भी हिस्से से सहमत नहीं हैं, तो आपको तुरंत प्लेटफॉर्म का उपयोग बंद कर देना चाहिए। हम उन किसी भी व्यक्ति को पहुंच से वंचित करने का अधिकार सुरक्षित रखते हैं जो इन शर्तों का उल्लंघन करते हैं।</p>
+
+                    <h3>2. उपयोगकर्ता की जिम्मेदारियां</h3>
+                    <p>उपयोगकर्ताओं से अपेक्षा की जाती है कि वे पंजीकरण के दौरान और प्रश्न जमा करते समय सटीक, वर्तमान और पूर्ण जानकारी प्रदान करें। आप अपने खाते के क्रेडेंशियल्स की गोपनीयता बनाए रखने और अपने खाते के तहत होने वाली सभी गतिविधियों के लिए जिम्मेदार हैं। अनधिकृत विज्ञापन, स्पैमिंग या धोखाधड़ी गतिविधियों के लिए प्लेटफॉर्म का उपयोग करने का कोई भी प्रयास सख्त वर्जित है। उपयोगकर्ताओं को सिस्टम के साथ सम्मानपूर्वक जुड़ना चाहिए और किसी भी अपमानजनक या अवैध सामग्री को जमा करने से बचना चाहिए।</p>
+
+                    <h3>3. डेटा उपयोग नीति</h3>
+                    <p>कृषि मित्र के माध्यम से प्रदान किया गया डेटा, जिसमें फसल की जानकारी, बाजार के रुझान और सलाहकार प्रतिक्रियाएं शामिल हैं, केवल सामान्य सूचनात्मक उद्देश्यों के लिए अभिप्रेत है। हम गुणवत्तापूर्ण जानकारी प्रदान करने का प्रयास करते हैं, लेकिन हम इसकी पूर्णता या किसी विशिष्ट कृषि निर्णय के लिए उपयुक्तता की गारंटी नहीं देते हैं। डेटा का आपका उपयोग आपकी स्वयं की विसंगति और जोखिम पर है। कृषि मित्र अनुसंधान और मंच सुधार उद्देश्यों के लिए अज्ञात डेटा एकत्र करने का अधिकार सुरक्षित रखता है।</p>
+
+                    <h3>4. बाहरी डेटा अस्वीकरण</h3>
+                    <p>कृषि मित्र विभिन्न बाहरी स्रोतों से गतिशील डेटा को एकीकृत करता है, जैसे कि मौसम अपडेट के लिए आधिकारिक मौसम विभाग और मंडी भाव (कीमतों) के लिए बाजार पोर्टल। हम इन बाहरी सेवाओं के मालिक नहीं हैं और न ही उन्हें नियंत्रित करते हैं। परिणामस्वरूप, हालांकि हम उच्च विश्वसनीयता का लक्ष्य रखते हैं, हम इस बाहरी डेटा की पूर्ण सटीकता, समयबद्धता या उपलब्धता की गारंटी नहीं दे सकते। उपयोगकर्ताओं को उच्च-दांव वाले वित्तीय निर्णय लेने से पहले आधिकारिक सरकारी राजपत्रों या भौतिक बाजार पूछताछ के साथ महत्वपूर्ण जानकारी को क्रॉस-सत्यापित करना चाहिए।</p>
+
+                    <h3>5. देयता की सीमा</h3>
+                    <p>कानून द्वारा अनुमत अधिकतम सीमा तक, कृषि मित्र, इसके प्रशासक और इसके भागीदार प्लेटफॉर्म के आपके उपयोग या उपयोग करने में असमर्थता के परिणामस्वरूप होने वाले किसी भी प्रत्यक्ष, अप्रत्यक्ष, आकस्मिक या परिणामी नुकसान के लिए उत्तरदायी नहीं होंगे। इसमें फसल की विफलता, वित्तीय निवेश, या व्यावसायिक रुकावटों से जुड़े नुकसान शामिल हैं, लेकिन इन्हीं तक सीमित नहीं हैं। खेती कई बाहरी चरों (जलवायु, कीटों के प्रकोप, बाजार की अस्थिरता) के अधीन है जो किसी भी सलाहकार प्रणाली के नियंत्रण से बाहर हैं।</p>
+
+                    <h3>6. गोपनीयता उल्लेख</h3>
+                    <p>आपकी गोपनीयता हमारे लिए अत्यंत महत्वपूर्ण है। आपके व्यक्तिगत डेटा का संग्रह और उपयोग हमारी गोपनीयता नीति द्वारा नियंत्रित होता है। हम सुनिश्चित करते हैं कि आपकी संपर्क जानकारी और खेत के विवरण सुरक्षित रखे जाएं और केवल स्थानीय सलाहकार सेवाएं प्रदान करने के लिए उपयोग किए जाएं। हम विज्ञापनदाताओं को आपका व्यक्तिगत डेटा नहीं बेचते हैं। कृषि मित्र का उपयोग करके, आप हमारी गोपनीयता नीति में उल्लिखित प्रथाओं से भी सहमत होते हैं।</p>
+
+                    <h3>7. शर्तों में बदलाव</h3>
+                    <p>हम अपने विवेक से किसी भी समय इन नियमों और शर्तों को संशोधित करने या बदलने का अधिकार सुरक्षित रखते हैं। महत्वपूर्ण बदलावों की घोषणा हमारे होमपेज पर या सिस्टम सूचनाओं के माध्यम से की जाएगी। उन संशोधनों के प्रभावी होने के बाद हमारे प्लेटफॉर्म तक पहुंच जारी रखकर, आप संशोधित शर्तों से बाध्य होने के लिए सहमत होते हैं। हम अनुशंसा करते हैं कि उपयोगकर्ता अपने कानूनी अधिकारों और दायित्वों के बारे में सूचित रहने के लिए समय-समय पर इस पृष्ठ की समीक्षा करें।</p>
+                `
+            }
+        };
+
+        function renderTerms() {
+            const lang = localStorage.getItem('krishi_mitra_lang') || 'en';
+            const strings = translations[lang];
+
+            document.getElementById('termsTitle').innerText = strings.title;
+            document.getElementById('lastUpdated').innerText = strings.updated;
+            document.getElementById('backBtnText').innerHTML = strings.back;
+            document.getElementById('termsContent').innerHTML = strings.content;
+            
+            document.title = strings.title + " - Krishi Mitra";
+        }
+
+        window.addEventListener('DOMContentLoaded', renderTerms);
+    </script>
+</body>
+</html>
